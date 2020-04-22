@@ -1,6 +1,5 @@
-#include "Headers/Engine/Models/Texture.h"
-
 #pragma once
+#include "Headers/Engine/Models/Texture.h"
 
 class Material {
 private:

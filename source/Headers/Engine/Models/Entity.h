@@ -52,7 +52,7 @@ public:
 
     void render(
             Camera &camera,
-            std::vector<PointLight> pointLights
+            std::vector<PointLight>& pointLights
     );
 
 

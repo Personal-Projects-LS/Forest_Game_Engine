@@ -1,4 +1,3 @@
-
 #include "Headers/Engine/Graphics/Materials/Material.h"
 
 Material::Material(const char* directory, int type) {

@@ -69,7 +69,7 @@ void Entity::render(Camera& camera, Shader& inputShader, glm::vec3& lightPos, gl
     Mesh::unbindVAO();
 }
 
-void Entity::render(Camera& camera, std::vector<PointLight> pointLights) {
+void Entity::render(Camera& camera, std::vector<PointLight>& pointLights) {
     shader.use();
 
     mesh->bindVAO();
@@ -95,7 +95,6 @@ void Entity::render(Camera& camera, std::vector<PointLight> pointLights) {
     }
 
     shader.setFloat("nLights", pointLights.size());
-    //shader.setVec3("test", glm::vec3(1,0,0));
 
     glDrawArrays(GL_TRIANGLES, 0, mesh->getNumOfVertices());
 

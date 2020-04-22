@@ -114,8 +114,6 @@ unsigned int Texture::get_ID(){
 void Texture::bind(Shader &shader) {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, IDContainer->getID());
-    //std::string name("texture");
-    //name += std::to_string(textureUnit);
     int textureLoc = glGetUniformLocation(shader.ID, shaderName.c_str());
     glUniform1i(textureLoc, textureUnit);
 }
