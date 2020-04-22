@@ -286,11 +286,6 @@ int main() {
         }
     }
 
-
-    int scrWidth, scrHeight;
-    glfwGetFramebufferSize(window.getWindow(), &scrWidth, &scrHeight);
-    glViewport(0, 0, scrWidth, scrHeight);
-
     while (!glfwWindowShouldClose(window.getWindow()) && player.getHealth() > 0) {
         Input::getInstance()->processInput(&player);
 
@@ -322,8 +317,8 @@ int main() {
         player.movePlayer(entities, terrains, nullptr, false);
 
         player.render(normalMappedShader, lightPos, lightColor);
-        spirit.updateAnimals(entities, terrains);
-        spirit.update(entities, terrains);
+        //spirit.updateAnimals(entities, terrains);
+        //spirit.update(entities, terrains);
         for(Entity* entity : entities) {
             entity->render(camera, normalMappedShader, lightPos, lightColor);
         }
@@ -336,7 +331,7 @@ int main() {
         //textButton.render(buttonShader); //@todo get rid of the order of rendering of quads mattering
 
         pbrShader.use();
-        pbrShader.setInt("textured", false);
+        pbrShader.setInt("textured", true);
         //ibl.bindMaps();
         centerEntity.render(camera, pointLights);
 

@@ -1,5 +1,7 @@
 #include <Headers/Engine/Models/stb_image.h> //must be included in cpp file
 
+#include <utility>
+
 #include "Headers/Engine/Models/Texture.h"
 
 Texture::Texture() {
@@ -8,11 +10,11 @@ Texture::Texture() {
 
 Texture::Texture(const char *filename, int unit, std::string nameInShader) {
     textureFilename = std::string(filename);
-    shaderName = nameInShader;
+    shaderName = std::move(nameInShader);
     unsigned int ID;
 
     int type = 0;
-    if (std::regex_match(filename, std::regex("(.+)(\\.png)"))) {
+    if (std::regex_match(filename, std::regex("(.+)(\\.png)")) || std::regex_match(filename, std::regex("(.+)(\\.bmp)"))) {
         type = PNG;
     }
     else if (std::regex_match(filename, std::regex("(.+)(\\.jpg)"))) {
