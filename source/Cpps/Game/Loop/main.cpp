@@ -30,6 +30,7 @@
 #include "Headers/Engine/Graphics/Materials/Material.h"
 #include "Headers/Engine/Graphics/Lighting/IBL/HDRI.h"
 #include "Headers/Engine/Graphics/Lighting/IBL/IBL.h"
+#include "Headers/Game/Loop/StateManager.h"
 
 //@todo find out why collision engine broke
 //@todo find out why health and damage to player system is completely broken
@@ -42,6 +43,7 @@ int main() {
     Window window(&camera);
     Player player;
     Input input(&window, &camera);
+    StateManager stateManager(&window);
 
     HDR hdr(window);
 
@@ -162,12 +164,27 @@ int main() {
     FontFileReader fontFile("../res/calibri.fnt");
     ImageFileReader imageFile("../res/calibri.png");
 
-    Button textButton(
-            Text(fontFile, imageFile, std::string("Donnette")),
-            glm::vec2(0.0f, 0.0f),
-            glm::vec2(1.5, 1.5),
-            nullptr,
-            &window
+    Button playButton(
+            Text(fontFile, imageFile, std::string("Resume")),
+            glm::vec2(0.0f, 0.5f),
+            glm::vec2(0.75, 0.75),
+            [&stateManager]()->void{ stateManager.resumeGame(*stateManager.window);},
+            &window,
+            false,
+            true,
+            Texture("../res/container.jpg", 1, "texture1")
+
+    );
+
+    Button exitButton(
+            Text(fontFile, imageFile, std::string("Quit")),
+            glm::vec2(0.0f, -0.5f),
+            glm::vec2(0.75, 0.75),
+            [&stateManager]()->void{ stateManager.exitGame();},
+            &window,
+            false,
+            true,
+            Texture("../res/container.jpg", 1, "texture1")
     );
 
     Button textureButton(
@@ -287,7 +304,7 @@ int main() {
     }
 
     while (!glfwWindowShouldClose(window.getWindow()) && player.getHealth() > 0) {
-        Input::getInstance()->processInput(&player);
+        Input::getInstance()->processInput(&player, stateManager);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(static_cast<unsigned int>(GL_COLOR_BUFFER_BIT) | static_cast<unsigned int>(GL_DEPTH_BUFFER_BIT));
@@ -314,11 +331,21 @@ int main() {
             Input::getInstance()->setShouldShoot(false);
         }
 
-        player.movePlayer(entities, terrains, nullptr, false);
+        if(stateManager.getState() == StateManager::RUNNING) {
+            player.movePlayer(entities, terrains, nullptr, false);
+            spirit.updateAnimals(entities, terrains);
+            spirit.update(entities, terrains);
+            textureButton.render(buttonShader);
+        } else if(stateManager.getState() == StateManager::PAUSED) {
+            playButton.render(buttonShader); //@todo get rid of the order of rendering of quads mattering
+            exitButton.render(buttonShader);
+        } else if(stateManager.getState() == StateManager::QUITING) {
+            glfwSetWindowShouldClose(window.getWindow(), true);
+            continue;
+        }
+
 
         player.render(normalMappedShader, lightPos, lightColor);
-        //spirit.updateAnimals(entities, terrains);
-        //spirit.update(entities, terrains);
         for(Entity* entity : entities) {
             entity->render(camera, normalMappedShader, lightPos, lightColor);
         }
@@ -327,8 +354,6 @@ int main() {
             terrain.render(camera, terrainShader, lightPos, lightColor);
         }
 
-        textureButton.render(buttonShader);
-        //textButton.render(buttonShader); //@todo get rid of the order of rendering of quads mattering
 
         pbrShader.use();
         pbrShader.setInt("textured", true);

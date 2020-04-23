@@ -23,7 +23,7 @@ Input::Input(Window *window, Camera *camera) {
     glfwSetCursorEnterCallback(window->getWindow(), cursor_enter_callback);
 }
 
-void Input::processInput(Player *player) {
+void Input::processInput(Player *player, StateManager& manager) {
     for(int i = 0; i < GLFW_KEY_LAST; ++i) {
         instance->m_keys[i] = glfwGetKey(instance->m_window, i) == GLFW_PRESS;
     }
@@ -32,21 +32,26 @@ void Input::processInput(Player *player) {
     }
 
     if(instance->m_keys[GLFW_KEY_ESCAPE]) {
-        glfwSetWindowShouldClose(instance->m_window, true);
+        manager.pauseGame(*manager.window);
     }
 
-    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
-        player->setSpeed(Player::SPEED);
-    } else if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
-        player->setSpeed(-Player::SPEED);
+    if(manager.getState() == manager.RUNNING) {
+        if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
+            player->setSpeed(Player::SPEED);
+        } else if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
+            player->setSpeed(-Player::SPEED);
+        } else {
+            player->setSpeed(0);
+        }
+        if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
+            player->setLateralSpeed(Player::LATERAL_SPEED);
+        } else if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
+            player->setLateralSpeed(-Player::LATERAL_SPEED);
+        } else {
+            player->setLateralSpeed(0);
+        }
     } else {
         player->setSpeed(0);
-    }
-    if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) {
-        player->setLateralSpeed(Player::LATERAL_SPEED);
-    } else if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) {
-        player->setLateralSpeed(-Player::LATERAL_SPEED);
-    } else {
         player->setLateralSpeed(0);
     }
     if(glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS && !player->isInAir()) {

@@ -6,6 +6,7 @@
 #include <Headers/Engine/Camera/Camera.h>
 #include <Headers/Game/Player/Player.h>
 #include "Window.h"
+#include "Headers/Game/Loop/StateManager.h"
 
 class Input {
 public:
@@ -13,7 +14,7 @@ public:
 
     Input(Window *window, Camera *camera);
 
-    void processInput(Player *player);
+    void processInput(Player *player, StateManager& manager);
 
     static bool isKeyDown(int key);
     static bool isButtonDown(int button);
