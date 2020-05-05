@@ -1,11 +1,8 @@
 #include "Headers/Game/Player/Player.h"
 
-Player::Player() = default;
-
-Player::Player(Camera *camera1, Entity *container1, CollisionHandler &collisionHandler) {
-    camera = camera1;
-    playerEntity = container1;
-    handler = collisionHandler;
+Player::Player(Camera *camera1, Entity *container1, CollisionHandler &collisionHandler)
+: camera(camera1), playerEntity(container1), handler(collisionHandler)
+{
     handler.move.eRadius = playerEntity->getScale();
 }
 

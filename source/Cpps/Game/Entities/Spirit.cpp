@@ -35,16 +35,16 @@ void Spirit::releasePlayer(std::vector<Entity *> &entities) {
     m_boundingBox->turnOff(entities);
 }
 
-void Spirit::spawnDeer(glm::vec3&& pos, std::vector<Entity*>& entities) {
-    m_deer.push_back(std::make_shared<Animal>(m_genericDeer));
-    m_deer[m_deer.size() - 1]->getEntityPointer()->setPos(pos);
-    entities.push_back(m_deer[m_deer.size() - 1]->getEntityPointer());
+void Spirit::spawnDeer(glm::vec3 pos, std::vector<Entity*>& entities) {
+    m_deer.push_back(m_genericDeer);
+    m_deer[m_deer.size() - 1].getEntityPointer()->setPos(pos);
+    entities.push_back(m_deer[m_deer.size() - 1].getEntityPointer());
 }
 
-void Spirit::spawnWolf(glm::vec3&& pos, std::vector<Entity*>& entities) {
-    m_wolves.push_back(std::make_shared<Animal>(m_genericWolf));
-    m_wolves[m_wolves.size() - 1]->getEntityPointer()->setPos(pos);
-    entities.push_back(m_wolves[m_wolves.size() - 1]->getEntityPointer());
+void Spirit::spawnWolf(glm::vec3 pos, std::vector<Entity*>& entities) {
+    m_wolves.push_back(m_genericWolf);
+    m_wolves[m_wolves.size() - 1].getEntityPointer()->setPos(pos);
+    entities.push_back(m_wolves[m_wolves.size() - 1].getEntityPointer());
 }
 
 void Spirit::spawn(std::vector<Entity*>& entities) {

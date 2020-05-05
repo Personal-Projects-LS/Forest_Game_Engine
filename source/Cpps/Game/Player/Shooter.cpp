@@ -1,8 +1,8 @@
 #include "Headers/Game/Player/Shooter.h"
 
 Shooter::Shooter(Camera *camera, Entity* entity, Player* player)
-        : m_camera(camera), m_bulletEntity(entity), m_player(player) {
-    m_handler = CollisionHandler(m_bulletEntity);
+        : m_camera(camera), m_bulletEntity(entity), m_player(player), m_handler(m_bulletEntity)
+{
     update();
 }
 
@@ -20,8 +20,8 @@ void Shooter::calculateCurrentRay() {
     glm::vec4 coords(mouseCoords.x, mouseCoords.y, -1.0, 1.0);
     coords = toEyeCoords(coords);
     m_currentRay = toWorldCoords(coords);*/
-    m_currentRay = m_camera->Front;
 
+    m_currentRay = m_camera->getFront();
 }
 
 glm::vec3 Shooter::toWorldCoords(glm::vec4 eyeCoords) {

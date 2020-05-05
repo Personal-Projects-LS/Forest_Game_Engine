@@ -9,40 +9,46 @@
 
 class Input {
 public:
-    Input();
+    Input(const Input&) = delete;
+    Input(Input&&) = delete;
+    Input& operator=(const Input&) = delete;
+    Input& operator=(Input&&) = delete;
 
-    Input(Window *window, Camera *camera);
+    Input() noexcept = default;
 
-    void processInput(Player *player);
+    Input(Window *window, Camera *camera) noexcept;
 
-    static bool isKeyDown(int key);
-    static bool isButtonDown(int button);
+    static bool isKeyDown(int key) noexcept;
+    static bool isButtonDown(int button) noexcept;
 
-    static double getScrollY();
-    static double getScrollX();
+    static double getScrollY() noexcept;
+    static double getScrollX() noexcept;
 
-    static double getMouseY();
-    static double getMouseX();
+    static double getMouseY() noexcept;
+    static double getMouseX() noexcept;
 
-    bool isShouldShoot();
-    void setShouldShoot(bool value);
+    static bool isShouldShoot() noexcept;
+    static void setShouldShoot(bool value) noexcept;
 
-    static std::unique_ptr<Input>& getInstance();
+    static void processInput(Player *player) noexcept;
+
 private:
-    static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-    static void cursor_enter_callback(GLFWwindow* window, int entered);
+    void processInputImpl(Player *player) noexcept;
 
-    GLFWwindow *m_window;
-    Camera *m_camera;
+    static void mouse_callback([[maybe_unused]] GLFWwindow* window, double xpos, double ypos);
+    static void scroll_callback([[maybe_unused]] GLFWwindow* window, double xoffset, double yoffset);
+    static void cursor_enter_callback([[maybe_unused]] GLFWwindow* window, int entered);
 
-    std::array<bool, GLFW_KEY_LAST> m_keys;
-    std::array<bool, GLFW_MOUSE_BUTTON_LAST> m_buttons;
+    GLFWwindow *m_window{};
+    Camera *m_camera{};
 
-    double m_scrollX, m_scrollY;
-    float lastX, lastY;
+    std::array<bool, GLFW_KEY_LAST> m_keys{};
+    std::array<bool, GLFW_MOUSE_BUTTON_LAST> m_buttons{};
 
-    bool firstMouse;
+    double m_scrollX{}, m_scrollY{};
+    float lastX{}, lastY{};
+
+    bool firstMouse{};
 
     static std::unique_ptr<Input> instance;
 

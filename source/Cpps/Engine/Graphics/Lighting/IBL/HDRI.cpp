@@ -1,7 +1,3 @@
-//
-// Created by dwest7928 on 11/15/2019.
-//
-
 #include "Headers/Engine/Graphics/Lighting/IBL/HDRI.h"
 #include "Headers/Engine/Models/stb_image.h"
 

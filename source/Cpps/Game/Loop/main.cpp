@@ -1,5 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include <Headers/Engine/Models/stb_image.h>
+#include <Headers/Engine/Models/stb_image.h> //needs to be imported here because of an issue in stb_image
 
 #include <memory>
 #include <vector>
@@ -9,18 +9,16 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "Headers/Engine/IO/Audio.h"
+#include "Headers/Engine/Audio/Listener.h"
+#include "Headers/Engine/Audio/Sound.h"
 #include "Headers/Engine/Shader/Shader.h"
 #include "Headers/Engine/Camera/Camera.h"
-#include "Headers/Engine/Models/Texture.h"
+#include "Headers/Engine/Texture/Texture.h"
 #include "Headers/Engine/Models/Mesh.h"
 #include "Headers/Engine/Models/Entity.h"
 #include "Headers/Engine/Terrain/Terrain.h"
 #include "Headers/Engine/Terrain/TerrainTextureMap.h"
-#include "Headers/Game/Player/Player.h"
-#include "Headers/Game/Environment/BoundingBox.h"
-#include "Headers/Game/Entities/Spirit.h"
-#include "Headers/Game/Player/Shooter.h"
-#include "Headers/Game/Environment/Item.h"
 #include "Headers/Engine/IO/Input.h"
 #include "Headers/Engine/Skybox/Skybox.h"
 #include "Headers/Engine/GUI/Button.h"
@@ -28,8 +26,14 @@
 #include "Headers/Engine/Graphics/HDR.h"
 #include "Headers/Engine/Graphics/Lighting/PointLight.h"
 #include "Headers/Engine/Graphics/Materials/Material.h"
-#include "Headers/Engine/Graphics/Lighting/IBL/HDRI.h"
-#include "Headers/Engine/Graphics/Lighting/IBL/IBL.h"
+//#include "Headers/Engine/Graphics/Lighting/IBL/HDRI.h"
+//#include "Headers/Engine/Graphics/Lighting/IBL/IBL.h"
+
+//#include "Headers/Game/Player/Player.h"
+//#include "Headers/Game/Environment/BoundingBox.h"
+//#include "Headers/Game/Entities/Spirit.h"
+//#include "Headers/Game/Player/Shooter.h"
+//#include "Headers/Game/Environment/Item.h"
 
 //@todo find out why collision engine broke
 //@todo find out why health and damage to player system is completely broken
@@ -40,8 +44,15 @@
 int main() {
     Camera camera;
     Window window(&camera);
-    Player player;
     Input input(&window, &camera);
+
+    Audio audio;
+
+    Listener::updatePos(glm::vec3(0, 0, 1.0f));
+    Listener::updateVelocity(glm::vec3(0, 0, 0));
+    Listener::updateOrientation({ 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f });
+
+    Sound sound("../res/DuskHowl.wav");
 
     HDR hdr(window);
 
@@ -53,7 +64,6 @@ int main() {
             PointLight(glm::vec3(-10, -10, 16)+glm::vec3(-8.75,-8.75,0), glm::vec3(1), 1000),
             PointLight(glm::vec3(10, -10, 16)+glm::vec3(-8.75,-8.75,0), glm::vec3(1), 1000),
             PointLight(glm::vec3(10, 10, 16)+glm::vec3(-8.75,-8.75,0), glm::vec3(1), 1000)
-
     };
 
     std::vector<Entity*> entities;
@@ -84,26 +94,26 @@ int main() {
     );
 
     //IBL Shaders
-    Shader backgroundShader(
+    /*Shader backgroundShader(
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/backgroundVertex.glsl",
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/backgroundFragment.glsl"
-            );
+    );
     Shader equirectangularToCubemapShader(
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/cubemapVertex.glsl",
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/equirectangularToCubemapFragment.glsl"
-            );
+    );
     Shader irradianceShader(
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/cubemapVertex.glsl",
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/irradianceConvolution.glsl"
-            );
+    );
     Shader prefilterShader(
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/cubemapVertex.glsl",
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/prefilterFragment.glsl"
-            );
+    );
     Shader brdfShader(
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/brdfVertex.glsl",
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/brdfFragment.glsl"
-            );
+    );*/
 
 /*
     HDRI hdri("../res/Creek.hdr");
@@ -118,7 +128,7 @@ int main() {
     std::shared_ptr<Mesh> containerMesh = std::make_shared<Mesh>("../res/container.obj", true);
     std::shared_ptr<Mesh> wolfMesh = std::make_shared<Mesh>("../res/wolf.obj", false);
     std::shared_ptr<Mesh> deerMesh = std::make_shared<Mesh>("../res/deer.obj", false);
-    std::shared_ptr<Mesh> sphereMesh = std::make_shared<Mesh>("../res/Sphere.obj", true);
+    //std::shared_ptr<Mesh> sphereMesh = std::make_shared<Mesh>("../res/Sphere.obj", true);
 
 
     std::array<TerrainMesh, 2> terrainMeshes {
@@ -127,7 +137,6 @@ int main() {
     };
 
     Material pavement("../res/mud", 0);
-
 
     TerrainTextureMap terrainMap (
             "../res/blendMap.png",
@@ -154,176 +163,81 @@ int main() {
     Texture human("../res/human.jpg", 0, "texture0");
     Texture ghostTexture("../res/ghost.png", 0, "texture0");
     Texture noteTexture("../res/note.png", 0, "texture0");
-    std::vector<Texture> currentTextures;
-
 
     Skybox skybox(CubeMapTexture (textures, 0));
 
     FontFileReader fontFile("../res/calibri.fnt");
     ImageFileReader imageFile("../res/calibri.png");
 
-    Button textButton(
-            Text(fontFile, imageFile, std::string("Donnette")),
+    /*Button textButton(
+            std::make_unique<Text>(fontFile, imageFile, std::string("Donnette")),
             glm::vec2(0.0f, 0.0f),
             glm::vec2(1.5, 1.5),
             nullptr,
             &window
-    );
+    );*/
 
     Button textureButton(
-            Text(fontFile, imageFile, std::string("+")),
-            glm::vec2(0.0f, 0.0f),
-            glm::vec2(0.03, 0.05),
+            std::make_unique<Texture>(texture),
+            glm::vec2(2.0f, -2.0f),
+            glm::vec2(1.5, 1.5),
             [&hdr]()->void{hdr.setHDRStatus(!hdr.getHDRStatus());},
-            &window,
-            true
+            &window
     );
 
-    Entity centerEntity(sphereMesh, pavement, pbrShader, glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(5,5,5));
+    //Entity centerEntity(sphereMesh, pavement, pbrShader, glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(5,5,5));
 
     Entity playerEntity(
             containerMesh,
-            std::vector<Texture>{human},
+            {human},
             glm::vec3(0, 10, 0),
             glm::vec3(0, 0, 0),
             glm::vec3(1, 1, 1)
     );
-    playerEntity.setAsPlayerEntity();
-    entities.push_back(&playerEntity);
-
-    Entity wolfEntity(
-            wolfMesh,
-            std::vector<Texture>{wolfTexture},
-            glm::vec3(0, 10, 0),
-            glm::vec3(0, 0, 0),
-            glm::vec3(1, 1, 1)
-    );
-    wolfEntity.setAsAnimal();
-
-    Entity deerEntity(
-            deerMesh,
-            std::vector<Texture>{deerTexture},
-            glm::vec3(0, 10, 0),
-            glm::vec3(0, 0, 0),
-            glm::vec3(1, 1, 1)
-    );
-    deerEntity.setAsAnimal();
-
-    Entity spiritEntity(
-            containerMesh,
-            std::vector<Texture>{ghostTexture},
-            glm::vec3(100, 100, 100),
-            glm::vec3(0, 0, 0),
-            glm::vec3(1, 1, 1)
-    );
-    spiritEntity.setAsAnimal();
 
     std::array<Entity, 5> containers;
     //for loop values xTranslate, yTranslate, zTranslate build a staircase with containers
-    for (int i = 0, xTranslate = 0, yTranslate = 0, zTranslate = 0;
-            i < containers.size();
-            ++i, xTranslate += 0, yTranslate += 20, zTranslate += 25) {
-        containers[i].create(
-                containerMesh,
-                std::vector<Texture>{texture, normalMap, containerMap, specularMap},
+    for (int i = 0, xTranslate = 0, yTranslate = 0, zTranslate = 0; i < containers.size(); ++i, xTranslate += 0, yTranslate += 20, zTranslate += 25)
+    {
+        containers[i] = Entity(
+                containerMesh,{texture, normalMap, containerMap, specularMap},
                 glm::vec3(-250 + xTranslate, 10 + yTranslate, 100 + zTranslate),
-                glm::vec3(0, 0, 0),
-                glm::vec3(10, 10, 10)
+                glm::vec3(0),glm::vec3(10)
         );
         entities.push_back(&containers[i]);
     }
 
-    Entity bullet(
-            containerMesh,
-            std::vector<Texture>{texture},
-            glm::vec3(0, 0, 0),
-            glm::vec3(0, 0, 0),
-            glm::vec3(1, 1, 1)
-    );
-
-    Entity boundingBoxEntity(
-            containerMesh,
-            std::vector<Texture>{texture, normalMap, containerMap, specularMap},
-            glm::vec3(0, 0, 0),
-            glm::vec3(0, 0, 0),
-            glm::vec3(500, 500, 500)
-    );
-
-    Entity noteEntity1(
-            containerMesh,
-            std::vector<Texture>{noteTexture},
-            glm::vec3(10, 2, 0),
-            glm::vec3(0, 0, 0),
-            glm::vec3(1, 1, 1)
-    );
-
-    Entity noteEntity2(noteEntity1);
-    noteEntity2.setPos(glm::vec3(0, 2, 10));
-    noteEntity1.setAsItem();
-    noteEntity2.setAsItem();
-
     CollisionHandler playerCollider(&playerEntity);
-    player = Player(&camera, &playerEntity, playerCollider);
-    playerEntity.setAsPlayerEntity();
-    bullet.setAsBullet();
-    Shooter shooter(&camera, &bullet, &player);
-    entities.push_back(&playerEntity);
-
-    Animal wolf1(wolfEntity, &player, 1, 5, 2.0, 1.0);
-    Animal deer1(deerEntity, &player, 3, 3, 1.5, 1.0);
-    BoundingBox boundingBox(&boundingBoxEntity);
-    Spirit spirit(spiritEntity, &player, &boundingBox, wolf1, deer1);
-    entities.push_back(spirit.getEntityPointer());
-    spirit.spawn(entities);
-
-    Item item1(&noteEntity1, [&hdr]()->void{hdr.setHDRStatus(!hdr.getHDRStatus());}, entities);
-    Item item2(&noteEntity2, [&hdr]()->void{hdr.setHDRStatus(!hdr.getHDRStatus());}, entities);
+    Player player(&camera, &playerEntity, playerCollider);
 
     std::array<Terrain, 9> terrains;
-    for (int x0 = -1, index = 0; x0 < 2 && index < terrains.size(); ++x0) {
-        for (int x1 = -1; x1 < 2; ++x1, ++index) {
-            terrains[index].create(terrainMap, terrainMeshes[0], x0, x1);
+    for (int x0 = 0, index = 0; x0 < 3 && index < terrains.size(); ++x0) {
+        for (int x1 = 0; x1 < 3; ++x1, ++index) {
+            terrains[index] = Terrain(terrainMap, &terrainMeshes[0], x0-1, x1-1);
         }
     }
 
-    while (!glfwWindowShouldClose(window.getWindow()) && player.getHealth() > 0) {
-        Input::getInstance()->processInput(&player);
+    //sound.play();
+
+    while (!glfwWindowShouldClose(window.getWindow())) { //&& player.getHealth() > 0) {
+        Input::processInput(&player);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(static_cast<unsigned int>(GL_COLOR_BUFFER_BIT) | static_cast<unsigned int>(GL_DEPTH_BUFFER_BIT));
 
         hdr.bind();
 
-        /*
-        if(!spirit.isAlive()) {
-            double respawnChance = rand() % 500;
-            if(respawnChance == 0) {
-                spirit.spawn(entities);
-            }
-        }
-         */
-
-
         skybox.render(skyboxShader, camera);
-        player.movePlayer(entities, terrains, boundingBox.getEntity(), spirit.isBound());
-        shooter.update();
-        item1.update(entities, &player);
-        item2.update(entities, &player);
-        if(Input::getInstance()->isShouldShoot()) {
-            shooter.shoot(entities, terrains);
-            Input::getInstance()->setShouldShoot(false);
-        }
 
-        player.movePlayer(entities, terrains, nullptr, false);
+        player.movePlayer(entities, terrains);
 
         player.render(normalMappedShader, lightPos, lightColor);
-        //spirit.updateAnimals(entities, terrains);
-        //spirit.update(entities, terrains);
-        for(Entity* entity : entities) {
+
+        for(const Entity *const entity : entities) {
             entity->render(camera, normalMappedShader, lightPos, lightColor);
         }
 
-        for(Terrain &terrain : terrains) {
+        for(const Terrain &terrain : terrains) {
             terrain.render(camera, terrainShader, lightPos, lightColor);
         }
 
@@ -331,23 +245,16 @@ int main() {
         //textButton.render(buttonShader); //@todo get rid of the order of rendering of quads mattering
 
         pbrShader.use();
-        pbrShader.setInt("textured", true);
+        pbrShader.setInt("textured", false);
         //ibl.bindMaps();
-        centerEntity.render(camera, pointLights);
+        //centerEntity.render(camera, pointLights);
 
 
         hdr.render(entityShader, 1);
 
         glfwSwapBuffers(window.getWindow());
         glfwPollEvents();
-
     }
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
-    glfwDestroyWindow(window.getWindow());
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-    glfwTerminate();
-#endif
     return 0;
 }

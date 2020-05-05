@@ -6,32 +6,25 @@
 #include <iostream>
 #include <string>
 
+#include "Headers/Engine/Texture/IQuadTexture.h"
 #include "Headers/Engine/Shader/Shader.h"
-#include "Headers/Engine/GUI/TextureResourceContainer.h"
+#include "Headers/Engine/ResourceContainers/TextureResourceContainer.h"
 
-class Texture {
+class Texture : public IQuadTexture {
 public:
     Texture();
     explicit Texture(const char *filename, int unit, std::string nameInShader);
-    Texture(Texture &&oldTexture) noexcept;
-    Texture(const Texture &original);
 
-    Texture& operator=(Texture &&oldTexture) noexcept;
-    Texture& operator=(const Texture &original);
-
-    void bind(Shader& shader);
-    void unbind();
+    void bind(const Shader& shader) const noexcept override;
+    void unbind() const noexcept override;
 
     static constexpr int PNG = 0;
     static constexpr int JPG = 1;
 
-    unsigned int get_ID();
+    [[nodiscard]] unsigned int get_ID() const;
 
-    ~Texture();
 private:
-    std::string textureFilename;
-
     std::shared_ptr<TextureResourceContainer> IDContainer = nullptr;
-    int textureUnit;
+    int textureUnit{};
     std::string shaderName;
 };

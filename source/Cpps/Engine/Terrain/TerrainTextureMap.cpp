@@ -1,9 +1,7 @@
 #include "Headers/Engine/Terrain/TerrainTextureMap.h"
 
-TerrainTextureMap::TerrainTextureMap() = default;
-
 TerrainTextureMap::TerrainTextureMap(const char *map, const char *texture1, const char *texture2, const char *texture3,
-                                     const char *texture4) {
+                                     const char *texture4) noexcept {
     textures.reserve(5);
     textures.emplace_back(map, 0, "texture0");
     textures.emplace_back(texture1, 1, "texture1");
@@ -12,27 +10,14 @@ TerrainTextureMap::TerrainTextureMap(const char *map, const char *texture1, cons
     textures.emplace_back(texture4, 4, "texture4");
 }
 
-TerrainTextureMap& TerrainTextureMap::operator=(TerrainTextureMap &&oldTerrainTextureMap) noexcept {
-    textures = std::move(oldTerrainTextureMap.textures);
-    oldTerrainTextureMap.textures.clear();
-
-    return *this;
-}
-
-TerrainTextureMap::~TerrainTextureMap() = default;
-
-void TerrainTextureMap::bindTextures(Shader &shader) {
-    for(Texture &texture : textures) {
+void TerrainTextureMap::bindTextures(const Shader &shader) const noexcept {
+    for(const Texture &texture : textures) {
         texture.bind(shader);
     }
 }
 
-void TerrainTextureMap::unBindTextures() {
-    for(Texture &texture : textures) {
+void TerrainTextureMap::unBindTextures() const noexcept {
+    for(const Texture &texture : textures) {
         texture.unbind();
     }
-}
-
-TerrainTextureMap::TerrainTextureMap(TerrainTextureMap const &original) {
-    textures = original.textures;
 }

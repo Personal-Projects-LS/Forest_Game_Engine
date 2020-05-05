@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Headers/Engine/Graphics/Lighting/IBL/IBL.h"
 
  IBL::IBL(HDRI hdr, Shader equirectangularToCubemapShader, Shader irradianceShader, Shader prefilterShader, Shader brdfShader, Shader backgroundShader) {
@@ -228,7 +226,7 @@ void IBL::renderQuad()
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     }
     glBindVertexArray(quadVAO);
-    //triangel strip might be an issue
+    //triangle strip might be an issue
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }

@@ -2,9 +2,7 @@
 
 std::unique_ptr<Input> Input::instance;
 
-Input::Input() = default;
-
-Input::Input(Window *window, Camera *camera) {
+Input::Input(Window *const window, Camera *const camera) noexcept {
     instance = std::make_unique<Input>();
 
     instance->m_window = window->getWindow();
@@ -23,7 +21,7 @@ Input::Input(Window *window, Camera *camera) {
     glfwSetCursorEnterCallback(window->getWindow(), cursor_enter_callback);
 }
 
-void Input::processInput(Player *player) {
+void Input::processInputImpl(Player *const player) noexcept { //@todo fix this code duplication and weird mutability
     for(int i = 0; i < GLFW_KEY_LAST; ++i) {
         instance->m_keys[i] = glfwGetKey(instance->m_window, i) == GLFW_PRESS;
     }
@@ -75,7 +73,7 @@ void Input::processInput(Player *player) {
     }
 }
 
-void Input::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+void Input::mouse_callback([[maybe_unused]] GLFWwindow* window, double xpos, double ypos) {
     if(instance->firstMouse){
         instance->lastX = static_cast<float>(xpos);
         instance->lastY = static_cast<float>(ypos);
@@ -93,41 +91,41 @@ void Input::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     instance->m_camera->ProcessMouseMovement(xoffset, yoffset, true);
 }
 
-void Input::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void Input::scroll_callback([[maybe_unused]] GLFWwindow* window, double xoffset, double yoffset) {
     instance->m_camera->ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
-void Input::cursor_enter_callback(GLFWwindow* window, int entered) {}
+void Input::cursor_enter_callback([[maybe_unused]] GLFWwindow* window, int entered) {}
 
-bool Input::isKeyDown(int key) {
+bool Input::isKeyDown(int key) noexcept {
     return instance->m_keys[key];
 }
-bool Input::isButtonDown(int button) {
+bool Input::isButtonDown(int button) noexcept {
     return instance->m_buttons[button];
 }
 
-double Input::getScrollY() {
+double Input::getScrollY() noexcept {
     return instance->m_scrollY;
 }
-double Input::getScrollX() {
+double Input::getScrollX() noexcept {
     return instance->m_scrollX;
 }
 
-double Input::getMouseY() {
+double Input::getMouseY() noexcept {
     return instance->lastY;
 }
-double Input::getMouseX() {
+double Input::getMouseX() noexcept {
     return instance->lastX;
 }
 
-bool Input::isShouldShoot() {
-    return shouldShoot;
+bool Input::isShouldShoot() noexcept {
+    return instance->shouldShoot;
 }
 
-void Input::setShouldShoot(bool value) {
-    shouldShoot = value;
+void Input::setShouldShoot(bool value) noexcept {
+    instance->shouldShoot = value;
 }
 
-std::unique_ptr<Input>& Input::getInstance() {
-    return instance;
+void Input::processInput(Player *player) noexcept {
+    instance->processInputImpl(player);
 }

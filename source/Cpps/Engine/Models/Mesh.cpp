@@ -1,10 +1,8 @@
 #include "Headers/Engine/Models/Mesh.h"
 
-Mesh::Mesh() {
-    numOfVertices = 0;
-}
-
 Mesh::Mesh(const char* filename, bool isNormalMapped) {
+    unsigned int VAO{}, VBO{}, texCoordBuffer{}, normalBuffer{}, tangentBuffer{}, bitangentBuffer{};
+
     std::vector<glm::vec3> tangents, bitangents;
     loadOBJ(filename, vertices, textureCoords, normals);
     numOfVertices = vertices.size();
@@ -13,7 +11,7 @@ Mesh::Mesh(const char* filename, bool isNormalMapped) {
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &texCoordBuffer);
     glGenBuffers(1, &normalBuffer);
-    bindVAO();
+    glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
@@ -53,59 +51,7 @@ Mesh::Mesh(const char* filename, bool isNormalMapped) {
     unbindVAO();
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-}
-
-Mesh::Mesh(Mesh& mesh) {
-    std::vector<glm::vec3> tangents, bitangents;
-    numOfVertices = mesh.numOfVertices;
-    normalMapped = mesh.isNormalMapped();
-    vertices = mesh.getVertices();
-    collisionCube = mesh.collisionCube;
-    textureCoords = mesh.getTextureCoords();
-    normals = mesh.getNormals();
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &texCoordBuffer);
-    glGenBuffers(1, &normalBuffer);
-    bindVAO();
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-    glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(glm::vec2), &textureCoords[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    if(normalMapped) {
-        CalculateTangentsAndBitangents(vertices, textureCoords, normals, tangents, bitangents);
-
-        glGenBuffers(1, &tangentBuffer);
-        glGenBuffers(1, &bitangentBuffer);
-
-        glBindBuffer(GL_ARRAY_BUFFER, tangentBuffer);
-        glBufferData(GL_ARRAY_BUFFER, tangents.size() * sizeof(glm::vec3), &tangents[0], GL_STATIC_DRAW);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, bitangentBuffer);
-        glBufferData(GL_ARRAY_BUFFER, bitangents.size() * sizeof(glm::vec3), &bitangents[0], GL_STATIC_DRAW);
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-        glEnableVertexAttribArray(3);
-        glEnableVertexAttribArray(4);
-    }
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-
-    unbindVAO();
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    meshBufferContainer = std::make_shared<MeshResourceContainer>(VAO, VBO, texCoordBuffer, normalBuffer, tangentBuffer, bitangentBuffer);
 }
 
 void Mesh::loadOBJ(const char* filename, std::vector<glm::vec3>& finalVertices, std::vector<glm::vec2>& finalTextureCoords, std::vector<glm::vec3>& finalNormals) {
@@ -114,7 +60,7 @@ void Mesh::loadOBJ(const char* filename, std::vector<glm::vec3>& finalVertices, 
         std::vector<glm::vec3> vertices, normals, final;
         std::vector<glm::vec2> textureCoords;
         std::vector<unsigned int> vertexIndices, textureIndices, normalIndices;
-        while (true){
+        while(true) {
             char lineHeader[128];
             int res = std::fscanf(file, "%s", lineHeader);
             if(res == EOF){
@@ -217,18 +163,8 @@ void Mesh::CalculateTangentsAndBitangents(
     }
 }
 
-
-Mesh::~Mesh() {
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &texCoordBuffer);
-    glDeleteBuffers(1, &normalBuffer);
-    glDeleteBuffers(1, &tangentBuffer);
-    glDeleteBuffers(1, &bitangentBuffer);
-    glDeleteVertexArrays(1, &VAO);
-}
-
 void Mesh::bindVAO() {
-    glBindVertexArray(VAO);
+    glBindVertexArray(meshBufferContainer->getVAO());
 }
 
 void Mesh::unbindVAO() {
@@ -256,21 +192,9 @@ bool Mesh::isNormalMapped() {
 }
 
 void Mesh::updateCube(glm::vec3 &vertex) {
-    if(vertex.x > greatestX) {
-        greatestX = vertex.x;
-    } else if(vertex.x < smallestX) {
-        smallestX = vertex.x;
-    }
-    if(vertex.y > greatestY) {
-        greatestY = vertex.y;
-    } else if(vertex.y < smallestY) {
-        smallestY = vertex.y;
-    }
-    if(vertex.z > greatestZ) {
-        greatestZ = vertex.z;
-    } else if(vertex.z < smallestZ) {
-        smallestZ = vertex.z;
-    }
+    vertex.x = std::clamp(static_cast<double>(vertex.x), smallestX, greatestX);
+    vertex.y = std::clamp(static_cast<double>(vertex.y), smallestY, greatestY);
+    vertex.z = std::clamp(static_cast<double>(vertex.z), smallestZ, greatestZ);
 }
 
 std::vector<glm::vec3>& Mesh::getCollisionCube() {

@@ -1,16 +1,22 @@
 #pragma once
 
-#include "Headers/Engine/Camera/Camera.h"
-#include "CubeMapTexture.h"
+#include <memory>
+#include <array>
 
-class Skybox {
+#include "Headers/Engine/ResourceContainers/SkyboxResourceContainer.h"
+#include "Headers/Engine/Camera/Camera.h"
+#include "Headers/Engine/Skybox/CubeMapTexture.h"
+
+class Skybox { //@todo find out if moving should be allowed or not
+private:
+    std::unique_ptr<SkyboxResourceContainer> skyboxBufferContainer;
+    CubeMapTexture skyboxTexture;
+
 public:
+    Skybox(const Skybox&) = delete;
+    Skybox& operator=(const Skybox&) = delete;
+
     explicit Skybox(const CubeMapTexture& texture);
 
-    ~Skybox();
-
     void render(Shader& shader, Camera& camera);
-private:
-    unsigned int VBO, VAO; //@todo write move constructor and move assignment operator or use pointer to container to protect opengl resources from being shallow copied and then destroyed accidentally
-    CubeMapTexture skyboxTexture;
 };

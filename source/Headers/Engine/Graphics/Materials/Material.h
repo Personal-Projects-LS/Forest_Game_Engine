@@ -1,4 +1,4 @@
-#include "Headers/Engine/Models/Texture.h"
+#include "Headers/Engine/Texture/Texture.h"
 
 #pragma once
 
@@ -14,15 +14,15 @@ public:
     Material(const char* directory, int type);
     Material();
 
-    Texture &getAlbedo();
+    [[nodiscard]] const Texture &getAlbedo() const;
 
-    Texture &getAo();
+    [[nodiscard]] const Texture &getAo() const;
 
-    Texture &getMetallic();
+    [[nodiscard]] const Texture &getMetallic() const;
 
-    Texture &getNormal();
+    [[nodiscard]] const Texture &getNormal() const;
 
-    Texture &getRoughness();
+    [[nodiscard]] const Texture &getRoughness() const;
 
 };
 

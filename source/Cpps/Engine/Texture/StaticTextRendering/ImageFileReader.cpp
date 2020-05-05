@@ -1,11 +1,9 @@
 #include <Headers/Engine/Models/stb_image.h>
 
-#include "Headers/Engine/GUI/StaticTextRendering/ImageFileReader.h"
-
-ImageFileReader::ImageFileReader() = default;
+#include "Headers/Engine/Texture/StaticTextRendering/ImageFileReader.h"
 
 ImageFileReader::ImageFileReader(const char *filename) {
-    int type = 0;
+    int type{};
     if (std::regex_match(filename, std::regex("(.+)(\\.png)"))) {
         type = PNG;
     }
@@ -14,33 +12,27 @@ ImageFileReader::ImageFileReader(const char *filename) {
     }
     else {
         std::cerr << "File type not supported!. Please supply a JPG or PNG!" << std::endl;
+        throw;
     }
 
-    if (type == PNG) {
-        data = stbi_load(filename, &width, &height, &nrchannels, STBI_rgb_alpha);
-    } else {
-        data = stbi_load(filename, &width, &height, &nrchannels, STBI_rgb);
-    }
+    auto desiredChannels = (type == PNG) ? STBI_rgb_alpha : STBI_rgb;
+    data = stbi_load(filename, &width, &height, &nrchannels, desiredChannels);
 }
 
-int ImageFileReader::getRawBufferWidth() {
+int ImageFileReader::getRawBufferWidth() const {
     return width;
 }
 
-int ImageFileReader::getRawBufferHeight() {
+int ImageFileReader::getRawBufferHeight() const {
     return height;
 }
 
-int ImageFileReader::getNR_Channels() {
+int ImageFileReader::getNR_Channels() const {
     return nrchannels;
 }
 
-unsigned char* ImageFileReader::getRawDataBuffer() {
+unsigned char* ImageFileReader::getRawDataBuffer() const {
     return data;
-}
-
-unsigned int ImageFileReader::get_ID() {
-    return ID;
 }
 
 ImageFileReader::~ImageFileReader() {

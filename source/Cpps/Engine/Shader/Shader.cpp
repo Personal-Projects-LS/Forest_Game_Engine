@@ -60,7 +60,8 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 // ------------------------------------------------------------------------
 
 Shader::Shader() = default;
-void Shader::use()
+
+void Shader::use() const
 {
     glUseProgram(Shader::ID);
 }
@@ -80,39 +81,35 @@ void Shader::setFloat(const std::string &name, float value) const
 {
     glUniform1f(glGetUniformLocation(Shader::ID, name.c_str()), value);
 }
-void Shader::setVec3(const std::string &name, glm::vec3 value){
+void Shader::setVec3(const std::string &name, glm::vec3 value) const {
     glUniform3f(glGetUniformLocation(Shader::ID, name.c_str()), value.x, value.y, value.z);
 }
-void Shader::setVec3(const std::string &name, float x, float y, float z){
+void Shader::setVec3(const std::string &name, float x, float y, float z) const {
     glUniform3f(glGetUniformLocation(Shader::ID, name.c_str()), x, y, z);
 }
 
-void Shader::setMat4(const std::string &name, glm::mat4 &mat) {
+void Shader::setMat4(const std::string &name, glm::mat4 &mat) const {
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);;
 }
 
 // utility function for checking shader compilation/linking errors.
 // ------------------------------------------------------------------------
-void Shader::checkCompileErrors(unsigned int shader, const std::string& type)
-{
+void Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
     int success;
     char infoLog[1024];
-    if (type != "PROGRAM")
-    {
+    if (type != "PROGRAM") {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if (!success)
-        {
+        if (!success) {
             glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
             std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
     }
-    else
-    {
+    else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
-        if (!success)
-        {
+        if (!success) {
             glGetProgramInfoLog(shader, 1024, nullptr, infoLog);
             std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+            throw;
         }
     }
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Headers/Engine/ResourceContainers/stb_PointerContainer.h"
+
+#include <memory>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -11,24 +14,35 @@
 
 class TerrainMesh {
 public:
-    TerrainMesh();
-    explicit TerrainMesh(const char* filename);
-    ~TerrainMesh();
+    TerrainMesh() = default;
 
-    void bindVAO();
+    TerrainMesh(const TerrainMesh &terrainMeshObj) = delete;
+    TerrainMesh(TerrainMesh &&oldTerrainMeshObj) = default;
+
+    explicit TerrainMesh(const char* filename);
+
+    TerrainMesh &operator=(const TerrainMesh &terrainMeshObj) = delete;
+    TerrainMesh &operator=(TerrainMesh &&oldTerrainMeshObj) = default;
+
+    void bindVAO() const;
 
     static void unbindVAO();
 
-    unsigned int getNumOfVertices();
+    [[nodiscard]] unsigned int getNumOfVertices() const;
 
     static constexpr float SIZE = 1600;
     static constexpr float MAX_HEIGHT = 80;
-    float getWidth();
-    float getHeight(float x, float z);
-    glm::vec3 calculateNormal(float x, float z);
+
+    [[nodiscard]] float getWidth() const;
+    [[nodiscard]] float getHeight(float x, float z) const;
+    [[nodiscard]] glm::vec3 calculateNormal(float x, float z) const;
+
+    ~TerrainMesh();
+
 private:
-    unsigned char *data = nullptr; //@todo find where data heap memory is freed. I suspect this is a heap memory leak.
-    int height;
+    std::shared_ptr<stb_PointerContainer> dataContainer = nullptr;
+
+    int height{};
     void loadTerrain(std::vector<glm::vec3>& verticies, std::vector<glm::vec3>& normals, std::vector<glm::vec2>& texCoords, std::vector<unsigned int>& indices, const char* filename);
-    unsigned int VAO, VBO, EBO, texCoordBuffer, normalBuffer, numOfVertices; //be careful with making numOfVertices unsigned. unsigned and signed number can NOT mix. //@todo decide whether it is ok to have numOfVertices be unsigned
+    unsigned int VAO{}, VBO{}, EBO{}, texCoordBuffer{}, normalBuffer{}, numOfVertices{}; //be careful with making numOfVertices unsigned. unsigned and signed number can NOT mix. //@todo decide whether it is ok to have numOfVertices be unsigned
 };

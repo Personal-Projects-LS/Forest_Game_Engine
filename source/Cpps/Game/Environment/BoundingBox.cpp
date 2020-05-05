@@ -6,12 +6,12 @@ BoundingBox::BoundingBox(Entity *box) : m_entity(box) {
 
 void BoundingBox::resetSize() {
     float scaleOffset = SIZE - m_entity->getScale().x;
-    m_entity->addScale(scaleOffset, scaleOffset, scaleOffset);
+    m_entity->addScale(glm::vec3(scaleOffset));
 }
 
 void BoundingBox::shrink() {
     if(m_entity->getScale().x > 50) {
-        m_entity->addScale(SPEED, SPEED, SPEED);
+        m_entity->addScale(glm::vec3(SPEED));
     }
 }
 

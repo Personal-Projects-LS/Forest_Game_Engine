@@ -2,8 +2,6 @@
 
 #include "Headers/Engine/Terrain/TerrainMesh.h"
 
-TerrainMesh::TerrainMesh() = default;
-
 TerrainMesh::TerrainMesh(const char* filename) {
     std::vector<glm::vec3> vertices, normals;
     std::vector<glm::vec2> texCoords;
@@ -47,7 +45,7 @@ TerrainMesh::~TerrainMesh() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void TerrainMesh::bindVAO() {
+void TerrainMesh::bindVAO() const {
     glBindVertexArray(VAO);
 }
 
@@ -55,13 +53,13 @@ void TerrainMesh::unbindVAO() {
     glBindVertexArray(0);
 }
 
-unsigned int TerrainMesh::getNumOfVertices() {
+[[nodiscard]] unsigned int TerrainMesh::getNumOfVertices() const {
     return numOfVertices;
 }
 
 void TerrainMesh::loadTerrain(std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals, std::vector<glm::vec2> &texCoords, std::vector<unsigned int> &indices, const char* filename) {
     int width, nrchannels;
-    data = stbi_load(filename, &width, &height, &nrchannels, 1);
+    dataContainer = std::make_shared<stb_PointerContainer>(stbi_load(filename, &width, &height, &nrchannels, 1));
     for(int i = 0; i < height; ++i){
         for(int j = 0; j < height; ++j){
             vertices.emplace_back(static_cast<float>(j)/static_cast<float>(height - 1) * SIZE, getHeight(static_cast<float>(j), static_cast<float>(i)), static_cast<float>(i)/static_cast<float>(height - 1) * SIZE);
@@ -86,31 +84,26 @@ void TerrainMesh::loadTerrain(std::vector<glm::vec3> &vertices, std::vector<glm:
     }
 }
 
-float TerrainMesh::getHeight(float x, float z) {
-    //x = std::clamp(x, 0.0f, getWidth());
-    //z = std::clamp(z, 0.0f, getWidth());
-
-    /*float terrainHeight = data[static_cast<int>(z * static_cast<float>(height) + x)];
-    terrainHeight /= 127.5;
-    terrainHeight -= 1;
-    terrainHeight *= MAX_HEIGHT;
-    return terrainHeight;*/
-
-    //@todo discuss whether to use code above or the below oneliner
-    //The line below allows the compiler to optimize the function call
-    return (((static_cast<float>(data[static_cast<int>(std::clamp(z, 0.0f, getWidth()) * static_cast<float>(height) + std::clamp(x, 0.0f, getWidth()))])/127.5f)-1.0f)*MAX_HEIGHT);
+[[nodiscard]] float TerrainMesh::getHeight(float x, float z) const {
+    return (((static_cast<float>(
+                dataContainer->getData()[static_cast<int>(
+                    std::clamp(z, 0.0f, getWidth())
+                    * static_cast<float>(height)
+                    + std::clamp(x, 0.0f, getWidth()))
+                ])/127.5f)-1.0f)*MAX_HEIGHT
+    );
 }
 
-glm::vec3 TerrainMesh::calculateNormal(float x, float z) {
-    float heightL = getHeight(x - 1, z);
-    float heightR = getHeight(x + 1, z);
-    float heightU = getHeight(x, z + 1);
-    float heightD = getHeight(x, z - 1);
+[[nodiscard]] glm::vec3 TerrainMesh::calculateNormal(float x, float z) const {
+    const float heightL = getHeight(x - 1, z);
+    const float heightR = getHeight(x + 1, z);
+    const float heightU = getHeight(x, z + 1);
+    const float heightD = getHeight(x, z - 1);
     glm::vec3 normal(heightL - heightR, 2, heightD - heightU);
     normal = glm::normalize(normal);
     return normal;
 }
 
-float TerrainMesh::getWidth() {
+[[nodiscard]] float TerrainMesh::getWidth() const {
     return static_cast<float>(height - 1);
 }

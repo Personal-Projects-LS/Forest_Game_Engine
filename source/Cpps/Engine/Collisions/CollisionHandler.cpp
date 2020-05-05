@@ -1,13 +1,12 @@
 #include "Headers/Engine/Collisions/CollisionHandler.h"
 
-CollisionHandler::CollisionHandler() = default;
-
-CollisionHandler::CollisionHandler(Entity *entity) {
-    this->m_entity = entity;
+CollisionHandler::CollisionHandler(Entity *entity)
+: m_entity(entity)
+{
     move.eRadius = m_entity->getScale();
 }
 
-void CollisionHandler::calculateCollisions(std::vector<Plane> &planes, Entity* entity) {
+void CollisionHandler::calculateCollisions(const std::vector<Plane> &planes, Entity* entity) {
     for(const Plane& plane : planes) {
         checkTriangle(plane, entity);
     }
@@ -58,8 +57,8 @@ void CollisionHandler::checkTriangle(const Plane &trianglePlane, Entity* entity)
                     planeIntersectionPoint,
                     trianglePlane.points[0],
                     trianglePlane.points[1],
-                    trianglePlane.points[2]
-                )) {
+                    trianglePlane.points[2]))
+            {
                 foundCollison = true;
                 t = static_cast<float>(t0);
                 collisionPoint = planeIntersectionPoint;
@@ -219,13 +218,13 @@ void CollisionHandler::checkTriangle(const Plane &trianglePlane, Entity* entity)
 // Does this triangle qualify for the closest hit?
 // it does if it’s the first hit or the closest
             if (!move.foundCollision || distToCollision < move.nearestDistance) {
-                if((entity->checkIfAnimal() || entity->checkIfItem()) && m_entity->checkIfBullet()) {
-                    m_hitEntity = entity;
-                } else {
-                    m_hitEntity = nullptr;
-                }
+                //if((entity->checkIfAnimal() || entity->checkIfItem()) && m_entity->checkIfBullet()) {
+                //    m_hitEntity = entity;
+                //} else {
+                //    m_hitEntity = nullptr;
+                //}
 // Collision information nessesary for sliding
-                move.hitPlayer = entity->checkIfPlayerEntity();
+                //move.hitPlayer = entity->checkIfPlayerEntity();
                 move.nearestDistance = distToCollision;
                 move.intersectionPoint = collisionPoint;
                 move.foundCollision = true;
@@ -246,8 +245,8 @@ std::vector<Plane> CollisionHandler::calculateCollidablePlanes(
                     && point.y < m_entity->getPos().y + 10
                     && point.y > m_entity->getPos().y - 10
                     && point.z < m_entity->getPos().z + 10
-                    && point.z > m_entity->getPos().z - 10
-                ) {
+                    && point.z > m_entity->getPos().z - 10)
+            {
                 nearbyPlanes.push_back(plane);
                 break;
             }
@@ -262,8 +261,8 @@ bool CollisionHandler::checkPointInTriangle(
         const glm::vec3& point,
         const glm::vec3& pa,
         const glm::vec3& pb,
-        const glm::vec3& pc
-    ) {
+        const glm::vec3& pc)
+{
     glm::vec3 e10=pb-pa;
     glm::vec3 e20=pc-pa;
     float a = glm::dot(e10, e10);
@@ -282,8 +281,8 @@ bool CollisionHandler::checkPointInTriangle(
 void CollisionHandler::collideAndSlide(
         const glm::vec3& vel,
         const glm::vec3& gravity,
-        std::vector<Entity*> &entities
-    ) {
+        std::vector<Entity*> &entities)
+{
     m_hitEntity = nullptr;
     move.startingPos = m_entity->getPos();
     move.movement = vel;
@@ -305,13 +304,13 @@ void CollisionHandler::collideAndSlide(
     } else if(finalPosition.y >= startingPos - gravity.y && move.foundCollision) {
         currentGravity.y = 0;
     }
-    if(m_hitEntity != nullptr) {
-        if(m_hitEntity->checkIfAnimal()) {
-            m_hitEntity->hit = true;
-        } else {
-            m_hitEntity->pickedUp = true;
-        }
-    }
+    //if(m_hitEntity != nullptr) {
+        //if(m_hitEntity->checkIfAnimal()) {
+        //    m_hitEntity->hit = true;
+        //} else {
+        //    m_hitEntity->pickedUp = true;
+        //}
+    //}
     finalPosition *= move.eRadius;
     assert(m_entity != nullptr);
     m_entity->setPos(finalPosition);
@@ -320,8 +319,8 @@ void CollisionHandler::collideAndSlide(
 glm::vec3 CollisionHandler::collideWithWorld(
         const glm::vec3& pos,
         const glm::vec3& vel,
-        std::vector<Entity*> &entities
-    ) {
+        std::vector<Entity*> &entities)
+{
     float unitScale = unitsPerMeter / 100.0f;
     float veryCloseDistance = 0.005f * unitScale;
     if (collisionRecursionDepth > 5) {
@@ -333,7 +332,7 @@ glm::vec3 CollisionHandler::collideWithWorld(
     move.foundCollision = false;
 // Check for collisions
     for(Entity *entity : entities) {
-        if(entity != m_entity  && !(entity->checkIfPlayerEntity() && m_entity->checkIfBullet())) {
+        if(entity != m_entity) { //  && !(entity->checkIfPlayerEntity() && m_entity->checkIfBullet())) {
             calculateCollisions(entity->planes, entity);
         }
     }
@@ -362,8 +361,8 @@ glm::vec3 CollisionHandler::collideWithWorld(
     if (std::sqrt(
             std::pow(newVelocityVector.x, 2)
             + std::pow(newVelocityVector.y, 2)
-            + std::pow(newVelocityVector.z, 2)
-        ) < veryCloseDistance || m_entity->checkIfBullet()) {
+            + std::pow(newVelocityVector.z, 2)) < veryCloseDistance) // || m_entity->checkIfBullet()) {
+    {
         return newBasePoint;
     }
 

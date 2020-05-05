@@ -12,26 +12,24 @@
 
 class Terrain {
 public:
-    Terrain();
+    Terrain() noexcept = default;
 
-    Terrain(TerrainTextureMap textureMap, TerrainMesh &terrainMesh, int gridX, int gridY);
+    Terrain(TerrainTextureMap textureMap, TerrainMesh *terrainMesh, int gridX, int gridY) noexcept;
 
-    void create(TerrainTextureMap textureMap, TerrainMesh &mesh, int gridX, int gridZ);
+    void render(const Camera& camera, const Shader& shader, glm::vec3 lightPos, glm::vec3 lightColor) const noexcept;
 
-    void render(Camera& camera, Shader& shader, glm::vec3& lightPos, glm::vec3& lightColor);
-    float getTerrainHeight(float worldX, float worldZ);
-    glm::vec3 getTerrainNormal(float worldX, float worldZ);
-    glm::vec3 getPos();
-    TerrainMesh &getTerrainMesh();
-    ~Terrain();
+    [[nodiscard]] float getTerrainHeight(float worldX, float worldZ) const noexcept;
+    [[nodiscard]] glm::vec3 getTerrainNormal(float worldX, float worldZ) const noexcept;
+    [[nodiscard]] glm::vec3 getPos() const noexcept;
+
 private:
     TerrainTextureMap terrainTextureMap;
-    TerrainMesh terrainMesh;
+    TerrainMesh *terrainMesh;
     glm::vec3 position{};
-    glm::mat4 modelMatrix{};
-    glm::mat4 createModelMatrix();
-    float getHeight(int vertexX, int vertexZ);
-    float getAverageHeight(float terrainX, float terrainZ);
-    static float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos);
+
+    [[nodiscard]] glm::mat4 createModelMatrix() const noexcept;
+    float getHeight(int vertexX, int vertexZ) const noexcept;
+    float getAverageHeight(float terrainX, float terrainZ) const noexcept;
+    static float barryCentric(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, glm::vec2 pos) noexcept;
 };
 

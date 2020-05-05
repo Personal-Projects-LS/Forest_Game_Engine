@@ -2,14 +2,11 @@
 
 #include <utility>
 
-#include "Headers/Engine/Models/Texture.h"
+#include "Headers/Engine/Texture/Texture.h"
 
-Texture::Texture() {
-    textureUnit = 0;
-};
+Texture::Texture() = default;
 
 Texture::Texture(const char *filename, int unit, std::string nameInShader) {
-    textureFilename = std::string(filename);
     shaderName = std::move(nameInShader);
     unsigned int ID;
 
@@ -26,7 +23,7 @@ Texture::Texture(const char *filename, int unit, std::string nameInShader) {
     textureUnit = unit;
     glGenTextures(1, &ID);
     int width, height, nrchannels;
-    unsigned char *data = nullptr;
+    unsigned char *data;
     if (type == PNG) {
         data = stbi_load(filename, &width, &height, &nrchannels, STBI_rgb_alpha);
     } else {
@@ -55,74 +52,20 @@ Texture::Texture(const char *filename, int unit, std::string nameInShader) {
     IDContainer = std::make_shared<TextureResourceContainer>(ID);
 }
 
-Texture::Texture(Texture &&oldTexture) noexcept {
-    IDContainer = oldTexture.IDContainer;
-    oldTexture.IDContainer = nullptr;
-
-    textureUnit = oldTexture.textureUnit;
-    oldTexture.textureUnit = 0;
-
-    shaderName = oldTexture.shaderName;
-}
-
-Texture::Texture(const Texture &original) {
-    if (this != &original) {
-        textureFilename = original.textureFilename;
-
-        textureUnit = original.textureUnit;
-
-        shaderName = original.shaderName;
-
-        assert(IDContainer == nullptr);
-        IDContainer = original.IDContainer;
-    }
-}
-
-Texture& Texture::operator=(Texture &&oldTexture) noexcept {
-    IDContainer = oldTexture.IDContainer;
-    oldTexture.IDContainer = nullptr;
-
-    textureUnit = oldTexture.textureUnit;
-
-    shaderName = oldTexture.shaderName;
-    oldTexture.textureUnit = 0;
-
-    return *this;
-}
-
-Texture& Texture::operator=(const Texture &original) {
-    if(this == &original) {
-        return *this;
-    }
-
-    textureFilename = original.textureFilename;
-
-    textureUnit = original.textureUnit;
-
-    shaderName = original.shaderName;
-
-    assert(IDContainer == nullptr);
-    IDContainer = original.IDContainer;
-
-    return *this;
-}
-
-Texture::~Texture() = default;
-
-unsigned int Texture::get_ID(){
+[[nodiscard]] unsigned int Texture::get_ID() const {
     return IDContainer->getID();
 }
 
-void Texture::bind(Shader &shader) {
+void Texture::bind(const Shader &shader) const noexcept {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, IDContainer->getID());
     //std::string name("texture");
     //name += std::to_string(textureUnit);
-    int textureLoc = glGetUniformLocation(shader.ID, shaderName.c_str());
+    const int textureLoc = glGetUniformLocation(shader.ID, shaderName.c_str());
     glUniform1i(textureLoc, textureUnit);
 }
 
-void Texture::unbind() {
+void Texture::unbind() const noexcept {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, 0);
 }

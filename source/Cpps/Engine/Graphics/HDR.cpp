@@ -20,6 +20,7 @@ HDR::HDR(Window &window) {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         std::cerr << "Framebuffer not complete!" << std::endl;
+        throw;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

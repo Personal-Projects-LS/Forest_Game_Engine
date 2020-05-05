@@ -1,18 +1,12 @@
-#include "Headers/Engine/GUI/StaticTextRendering/Text.h"
+#include "Headers/Engine/Texture/StaticTextRendering/Text.h"
 
 Text::Text() = default;
-
-Text::Text(Text &&textObj) noexcept {
-    ID = textObj.ID;
-    textObj.ID = 0;
-
-    text = std::move(textObj.text);
-    textObj.text.clear();
-}
 
 Text::Text(FontFileReader &fontInfo, ImageFileReader &imageData, const std::string &textString) {
     size_t maxHeight = 0;
     size_t lineWidth = 0;
+
+    unsigned int ID;
 
     for(char c : textString) {
         text.push_back(fontInfo.getChar(c));
@@ -24,13 +18,6 @@ Text::Text(FontFileReader &fontInfo, ImageFileReader &imageData, const std::stri
 
     const size_t SIZE = lineWidth*maxHeight*imageData.getNR_Channels();
     std::unique_ptr<unsigned char[]> textureDataBuffer = std::make_unique<unsigned char[]>(SIZE); //creates a buffer of heap memory that is deleted when the constructor scope ends
-
-    for(int i = 0; i < SIZE; ++i) { //@todo replace with memset padding (using for loop) to make more optimized
-        textureDataBuffer[i++] = 255;
-        textureDataBuffer[i++] = 165;
-        textureDataBuffer[i++] = 0;
-        textureDataBuffer[i] = 0;
-    }
 
     //@todo work on optimization & code refactoring (two unrelated tasks)
     size_t cursor = 0;
@@ -62,38 +49,27 @@ Text::Text(FontFileReader &fontInfo, ImageFileReader &imageData, const std::stri
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
         std::cerr << "Text Rendering Failed" << std::endl;
+        throw;
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    IDContainer = std::make_unique<TextureResourceContainer>(ID);
 }
 
-void Text::bind(Shader &shader) const {
+void Text::bind(const Shader &shader) const noexcept {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
-    glBindTexture(GL_TEXTURE_2D, ID);
+    glBindTexture(GL_TEXTURE_2D, IDContainer->getID());
     std::string name("texture");
     name += std::to_string(textureUnit);
     int textureLoc = glGetUniformLocation(shader.ID, name.c_str());
     glUniform1i(textureLoc, textureUnit);
 }
 
-void Text::unbind() {
+void Text::unbind() const noexcept {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Text &Text::operator=(Text &&textObj) noexcept {
-    ID = textObj.ID;
-    textObj.ID = 0;
-
-    text = std::move(textObj.text);
-    textObj.text.clear();
-
-    return *this;
-}
-
-unsigned int Text::get_ID() {
-    return ID;
-}
-
-Text::~Text() {
-    glDeleteTextures(1, &ID); //deletes texture unit to stop leaking vram
+[[nodiscard]] unsigned int Text::get_ID() const {
+    return IDContainer->getID();
 }

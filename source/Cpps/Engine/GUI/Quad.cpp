@@ -1,51 +1,36 @@
 #include "Headers/Engine/GUI/Quad.h"
 
-Quad::Quad() = default;
-
-Quad::Quad( //@todo make an interface for text and Texture to inherit from so that polymorphic pointers can be used
-        Text &&staticTextPar,
-        const glm::vec2 &position,
-        const glm::vec2 &scale,
-        bool isTransparentPar,
-        bool hasBackgroundImg,
-        Texture& backgroundImg) : staticText(std::move(staticTextPar)), position(position), scale(scale), backgroundTexture(backgroundImg) {
-
-    usingText = true;
-    isTransparent = isTransparentPar;
-    this->hasBackgroundImg = hasBackgroundImg;
-
-    createBuffers();
-}
-
 Quad::Quad(
-        Texture&& texturePar,
+        std::shared_ptr<IQuadTexture> &&textureParam,
         const glm::vec2 &position,
         const glm::vec2 &scale,
         bool isTransparentPar,
         bool hasBackgroundImg,
-        Texture& backgroundImg) : texture(std::move(texturePar)), position(position), scale(scale), backgroundTexture(backgroundImg) {
-
-    usingText = false;
+        Texture &&backgroundImg) noexcept
+        : texture(std::move(textureParam)), position(position), scale(scale), backgroundTexture(std::move(backgroundImg))
+{
     isTransparent = isTransparentPar;
     this->hasBackgroundImg = hasBackgroundImg;
 
     createBuffers();
 }
 
-void Quad::bindVAO() {
-    glBindVertexArray(VAO);
+void Quad::bindVAO() const noexcept {
+    glBindVertexArray(quadBuffers->getVAO());
 }
 
-void Quad::unbindVAO() {
+void Quad::unbindVAO() noexcept {
     glBindVertexArray(0);
 }
 
-void Quad::createBuffers() {
+void Quad::createBuffers() noexcept {
+    unsigned int VAO{}, VBO{}, TBO{}, IBO{};
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &TBO);
     glGenBuffers(1, &IBO);
-    bindVAO();
+    glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2), &vertices[0], GL_STATIC_DRAW);
@@ -64,114 +49,59 @@ void Quad::createBuffers() {
     unbindVAO();
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    quadBuffers = std::make_shared<QuadResourceContainer>(VAO, VBO, TBO, IBO);
 }
 
-void Quad::render(Shader &shader) {
+void Quad::render(const Shader &shader) const noexcept {
     shader.use();
 
     bindVAO();
-    if(usingText) {
-        staticText.bind(shader);
-    }
-    else {
-        texture.bind(shader);
-    }
+
+    texture->bind(shader);
 
     if(hasBackgroundImg) {
         backgroundTexture.bind(shader);
     }
 
-    int posInt = glGetUniformLocation(shader.ID, "position");
+    const int posInt = glGetUniformLocation(shader.ID, "position");
     glUniform2fv(posInt, 1, glm::value_ptr(position));
 
-    int scaleInt = glGetUniformLocation(shader.ID, "scale");
+    const int scaleInt = glGetUniformLocation(shader.ID, "scale");
     glUniform2fv(scaleInt, 1, glm::value_ptr(scale));
 
-    int offsetInt = glGetUniformLocation(shader.ID, "offset");
+    const int offsetInt = glGetUniformLocation(shader.ID, "offset");
     glUniform2fv(offsetInt, 1, glm::value_ptr(offset));
 
-    int isTransparentInt = glGetUniformLocation(shader.ID, "isTransparent");
+    const int isTransparentInt = glGetUniformLocation(shader.ID, "isTransparent");
     glUniform1i(isTransparentInt, isTransparent);
 
-    int hasBackgroundInt = glGetUniformLocation(shader.ID, "backgroundImg");
+    const int hasBackgroundInt = glGetUniformLocation(shader.ID, "backgroundImg");
     glUniform1i(hasBackgroundInt, hasBackgroundImg);
 
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 
-    if(usingText) {
-        Text::unbind();
-    }
-    else {
-        texture.unbind();
-    }
+    texture->unbind();
 
     unbindVAO();
 }
 
-Quad::~Quad() {
-    glDeleteBuffers(1, &IBO);
-    glDeleteBuffers(1, &TBO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
-}
-
-std::vector<glm::vec2> Quad::getVertices() {
+[[nodiscard]] const std::array<glm::vec2, 4> Quad::getVertices() const noexcept {
     return vertices;
 }
 
-glm::vec2 Quad::getScale() {
+[[nodiscard]] glm::vec2 Quad::getScale() const noexcept {
     return scale;
 }
 
-glm::vec2 Quad::getPos() {
+[[nodiscard]] glm::vec2 Quad::getPos() const noexcept {
     return position;
 }
 
-glm::vec2 Quad::getOffset() {
+[[nodiscard]] glm::vec2 Quad::getOffset() const noexcept {
     return offset;
 }
 
-void Quad::setOffsetX(float x) {
-    offset.x = x;
-}
-
-void Quad::setOffsetY(float y) {
-    offset.y = y;
-}
-
-Quad& Quad::operator=(Quad &&quad) noexcept {
-    usingText = quad.usingText;
-    isTransparent = quad.isTransparent;
-    hasBackgroundImg = quad.hasBackgroundImg;
-    if(hasBackgroundImg) {
-        backgroundTexture = std::move(quad.backgroundTexture);
-    } else {
-        backgroundTexture = Texture();
-    }
-
-    VAO = quad.VAO;
-    quad.VAO = 0;
-    VBO = quad.VBO;
-    quad.VBO = 0;
-    TBO = quad.TBO;
-    quad.TBO = 0;
-    IBO = quad.IBO;
-    quad.IBO = 0;
-
-    vertices = std::move(quad.vertices);
-    textureCoords = std::move(quad.textureCoords);
-    indices = std::move(quad.indices);
-
-    position = quad.position;
-    scale = quad.scale;
-    offset = quad.offset;
-
-    if(quad.usingText) {
-        staticText = std::move(quad.staticText); //@todo make an interface for text and Texture to inherit from so that polymorphic pointers can be used
-    }
-    else {
-        texture = std::move(quad.texture);
-    }
-
-    return *this;
+void Quad::setOffset(const glm::vec2 newOffset) noexcept {
+    offset = newOffset;
 }
