@@ -90,10 +90,10 @@ void Spirit::followPlayer(std::vector<Entity*> &entities, std::array<Terrain, N>
         move = glm::normalize(move);
         move *= MOVE_SPEED;
         m_collisionHandler.moveEntity(move, entities, terrains, m_boundingBox->getEntity(), m_playerBound);
-        if(m_collisionHandler.hitPlayer) {
-            m_damagedPlayer = true;
-            hitPlayer();
-        }
+        //if(m_collisionHandler.hitPlayer) {
+        //    m_damagedPlayer = true;
+        //    hitPlayer();
+        //}
     } else if(std::sqrt(move.x * move.x + move.y * move.y + move.z * move.z) > 30) {
         m_damagedPlayer = false;
     }

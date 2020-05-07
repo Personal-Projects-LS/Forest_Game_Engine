@@ -190,9 +190,9 @@ int main() {
     Entity playerEntity(
             containerMesh,
             {human},
-            glm::vec3(0, 10, 0),
             glm::vec3(0, 0, 0),
-            glm::vec3(1, 1, 1)
+            glm::vec3(0, 0, 0),
+            glm::vec3(1, 2, 1)
     );
 
     std::array<Entity, 5> containers;
@@ -201,8 +201,8 @@ int main() {
     {
         containers[i] = Entity(
                 containerMesh,{texture, normalMap, containerMap, specularMap},
-                glm::vec3(-250 + xTranslate, 10 + yTranslate, 100 + zTranslate),
-                glm::vec3(0),glm::vec3(10)
+                glm::vec3(-265 + xTranslate, 10 + yTranslate, 115 + zTranslate),
+                glm::vec3(0),glm::vec3(12)
         );
         entities.push_back(&containers[i]);
     }
@@ -231,7 +231,7 @@ int main() {
 
         player.movePlayer(entities, terrains);
 
-        player.render(normalMappedShader, lightPos, lightColor);
+        //player.render(normalMappedShader, lightPos, lightColor);
 
         for(const Entity *const entity : entities) {
             entity->render(camera, normalMappedShader, lightPos, lightColor);
@@ -241,7 +241,7 @@ int main() {
             terrain.render(camera, terrainShader, lightPos, lightColor);
         }
 
-        textureButton.render(buttonShader);
+        //textureButton.render(buttonShader);
         //textButton.render(buttonShader); //@todo get rid of the order of rendering of quads mattering
 
         pbrShader.use();

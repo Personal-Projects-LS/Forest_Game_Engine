@@ -57,5 +57,4 @@ void Player::movePlayer(std::vector<Entity*> &entities, std::array<Terrain, N> &
     finalMove += lateralSpeed * camera->getRight();
     handler.moveEntity(finalMove, entities, terrains);
     camera->setPosition(playerEntity->getPos());
-    camera->setYPos(playerEntity->getPos().y + 4);
 }

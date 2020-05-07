@@ -59,7 +59,6 @@ public:
     static constexpr float unitsPerMeter = 100;
 
     bool inAir = false;
-    bool hitPlayer = false;
     glm::vec3 currentGravity = glm::vec3(0,0,0);
     Movement move{};
 
@@ -95,9 +94,7 @@ void CollisionHandler::moveEntity(
         std::vector<Entity*> &entities,
         std::array<Terrain, N> &terrains)
 {
-    hitPlayer = false;
     currentTerrain = calculateCurrentTerrain(terrains);
-    calculateTerrainCollisions(finalMove);
     collideAndSlide(finalMove, currentGravity, entities);
     updateGravity();
 }
@@ -108,10 +105,9 @@ void CollisionHandler::moveEntityWithoutGravity(
         std::vector<Entity*> &entities,
         std::array<Terrain, N> &terrains)
 {
-    hitPlayer = false;
     currentTerrain = calculateCurrentTerrain(terrains);
     calculateTerrainCollisions(finalMove);
-    currentGravity = glm::vec3(0, 0, 0);
+    currentGravity = glm::vec3(0);
     collideAndSlide(finalMove, currentGravity, entities);
     updateGravity();
 }

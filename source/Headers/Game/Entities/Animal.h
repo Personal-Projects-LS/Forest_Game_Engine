@@ -76,10 +76,10 @@ void Animal::followPlayer(std::vector<Entity*> &entities, std::array<Terrain, N>
         move = glm::normalize(move);
         move *= m_move_speed;
         m_collisionHandler.moveEntity(move, entities, terrains, boundingBox, bound);
-        if(m_collisionHandler.hitPlayer) {
-            m_damagedPlayer = true;
-            hitPlayer();
-        }
+        //if(m_collisionHandler.hitPlayer) {
+        //    m_damagedPlayer = true;
+        //    hitPlayer();
+        //}
     } else if(std::sqrt(move.x * move.x + move.y * move.y + move.z * move.z) > 30) {
         m_damagedPlayer = false;
     }

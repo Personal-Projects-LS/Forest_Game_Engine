@@ -339,7 +339,6 @@ glm::vec3 CollisionHandler::collideWithWorld(
     if (!move.foundCollision) {
         return pos + vel;
     }
-    hitPlayer = move.hitPlayer;
     glm::vec3 destinationPoint = pos + vel;
     glm::vec3 newBasePoint = pos;
     if (move.nearestDistance >= veryCloseDistance) {
@@ -426,10 +425,10 @@ void CollisionHandler::calculateTerrainCollisions(glm::vec3 &finalMove) {
 }
 
 void CollisionHandler::updateGravity() {
-    if(m_entity->getPos().y <= currentTerrain->getTerrainHeight(
+    if((m_entity->getPos().y <= currentTerrain->getTerrainHeight(
             m_entity->getPos().x,
-            m_entity->getPos().z) + 1
-        ) {
+            m_entity->getPos().z) + 1) && (!move.foundCollision))
+    {
         glm::vec3 newPos(
                 m_entity->getPos().x,
                 currentTerrain->getTerrainHeight(
