@@ -131,12 +131,30 @@ glm::vec2 Quad::getOffset() {
     return offset;
 }
 
+bool Quad::getHasBackgroundImg() {
+    return hasBackgroundImg;
+}
+
+bool Quad::getIsTransparent() {
+    return isTransparent;
+}
+
+Texture Quad::getBackgroundTexture() {
+    return backgroundTexture;
+}
+
 void Quad::setOffsetX(float x) {
     offset.x = x;
 }
 
 void Quad::setOffsetY(float y) {
     offset.y = y;
+}
+
+void Quad::setText(Text &staticText) {
+    this->staticText = std::move(staticText);
+
+    createBuffers();
 }
 
 Quad& Quad::operator=(Quad &&quad) noexcept {

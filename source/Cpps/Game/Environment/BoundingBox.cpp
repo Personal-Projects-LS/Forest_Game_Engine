@@ -1,3 +1,5 @@
+#include <Headers/Game/Loop/Progression.h>
+#include <Headers/Game/Loop/Time.h>
 #include "Headers/Game/Environment/BoundingBox.h"
 
 BoundingBox::BoundingBox(Entity *box) : m_entity(box) {
@@ -11,7 +13,22 @@ void BoundingBox::resetSize() {
 
 void BoundingBox::shrink() {
     if(m_entity->getScale().x > 50) {
-        m_entity->addScale(SPEED, SPEED, SPEED);
+        float speed = 0.0f;
+        switch(Progression::getProgress()) {
+            case 0:
+                speed  = SPEED_LVL1 * Time::getDeltaTime();
+                break;
+            case 1:
+                speed  = SPEED_LVL2 * Time::getDeltaTime();
+                break;
+            case 2:
+                speed  = SPEED_LVL3 * Time::getDeltaTime();
+                break;
+            case 3:
+                speed  = SPEED_FINAL * Time::getDeltaTime();
+                break;
+        }
+        m_entity->addScale(speed, speed, speed);
     }
 }
 

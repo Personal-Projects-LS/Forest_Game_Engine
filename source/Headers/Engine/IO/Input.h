@@ -36,6 +36,7 @@ private:
 
     GLFWwindow *m_window;
     Camera *m_camera;
+    float lastShot = 0;
 
     std::array<bool, GLFW_KEY_LAST> m_keys;
     std::array<bool, GLFW_MOUSE_BUTTON_LAST> m_buttons;

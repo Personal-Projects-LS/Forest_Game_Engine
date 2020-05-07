@@ -32,6 +32,12 @@ Button::Button(
     clampToScreen();
 }
 
+void Button::setText(Text &&staticText) {
+    quad.setText(staticText);
+
+    clampToScreen();
+}
+
 void Button::onClick() {
     double xpos = Input::getInstance()->getMouseX();
     double ypos = Input::getInstance()->getMouseY();

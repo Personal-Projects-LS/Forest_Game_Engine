@@ -3,6 +3,7 @@
 #include <array>
 #include <Headers/Engine/Models/Entity.h>
 #include <Headers/Engine/Terrain/Terrain.h>
+#include "Headers/Game/Loop/Time.h"
 
 struct Movement {
     Movement() = default;
@@ -66,7 +67,7 @@ private:
     void updateGravity();
     float simGravity(float tics);
 public:
-    static constexpr glm::vec3 GRAVITY = glm::vec3(0, -0.08f, 0);
+    static constexpr glm::vec3 GRAVITY = glm::vec3(0, -3.5f, 0);
     static constexpr float unitsPerMeter = 100;
 
     bool inAir = false;
@@ -87,6 +88,7 @@ public:
         ) {
         hitPlayer = false;
         currentTerrain = calculateCurrentTerrain(terrains);
+        finalMove *= Time::getDeltaTime();
         calculateTerrainCollisions(finalMove);
         collideAndSlide(finalMove, currentGravity, entities);
         if(bound) {

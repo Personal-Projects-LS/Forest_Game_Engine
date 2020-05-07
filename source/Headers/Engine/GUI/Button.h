@@ -39,6 +39,7 @@ public:
             Texture&& backgroundImg = Texture()
     );
     void render(Shader& shader);
+    void setText(Text &&staticText);
 
 private:
     void onClick();

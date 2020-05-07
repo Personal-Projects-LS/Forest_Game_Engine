@@ -15,6 +15,11 @@ void StateManager::pauseGame(Window& window) {
     glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
+void StateManager::display(Window &window) {
+    gameState = DISPLAY;
+    glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
 void StateManager::exitGame() {
     gameState = QUITING;
 }

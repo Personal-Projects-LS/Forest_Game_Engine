@@ -8,12 +8,14 @@ public:
     enum State {
         RUNNING,
         PAUSED,
-        QUITING
+        QUITING,
+        DISPLAY
     };
 
     StateManager(Window* window);
 
     void pauseGame(Window& window);
+    void display(Window& window);
     void resumeGame(Window& window);
     void exitGame();
 

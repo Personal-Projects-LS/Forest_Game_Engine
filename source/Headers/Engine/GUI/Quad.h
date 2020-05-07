@@ -38,9 +38,13 @@ public:
     glm::vec2 getScale();
     glm::vec2 getPos();
     glm::vec2 getOffset();
+    bool getHasBackgroundImg();
+    bool getIsTransparent();
+    Texture getBackgroundTexture();
 
     void setOffsetX(float x);
     void setOffsetY(float y);
+    void setText(Text &staticText);
 
     ~Quad();
 private:

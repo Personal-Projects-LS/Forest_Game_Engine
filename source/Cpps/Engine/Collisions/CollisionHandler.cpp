@@ -442,7 +442,7 @@ void CollisionHandler::updateGravity() {
         currentGravity.y = 0;
         inAir = false;
     } else {
-        currentGravity.y += CollisionHandler::GRAVITY.y;
+        currentGravity.y += CollisionHandler::GRAVITY.y * Time::getDeltaTime();
     }
 }
 

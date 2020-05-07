@@ -71,9 +71,10 @@ void Input::processInput(Player *player, StateManager& manager) {
         held = false;
     }
     if(glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT)) {
-        if(!cursorHeld) {
+        if(!cursorHeld && glfwGetTime() - lastShot > 0.5) {
             cursorHeld = true;
             shouldShoot = true;
+            lastShot = glfwGetTime();
         }
     } else {
         cursorHeld = false;

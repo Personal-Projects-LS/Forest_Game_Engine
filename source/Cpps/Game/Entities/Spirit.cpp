@@ -51,11 +51,11 @@ void Spirit::spawn(std::vector<Entity*>& entities) {
     m_health = 1;
     m_alive = true;
     bindPlayer(entities);
-    int numOfWolves = rand() % 4 + 4;
+    int numOfWolves = rand() % (3 + (Progression::getProgress() * 2)) + Progression::getProgress();
     for(int i = 0; i < numOfWolves; ++i) {
         spawnWolf(glm::vec3(rand() % BoundingBox::SIZE + m_boundingBox->getEntity()->getPos().x - (BoundingBox::SIZE / 2) , 100, rand() % BoundingBox::SIZE + m_boundingBox->getEntity()->getPos().z - (BoundingBox::SIZE / 2)), entities);
     }
-    int numOfDeer = rand() % 4 + 4;
+    int numOfDeer = rand() % (3 + (Progression::getProgress() * 2)) + Progression::getProgress();
     for(int i = 0; i < numOfDeer; ++i) {
         spawnDeer(glm::vec3(rand() % BoundingBox::SIZE + m_boundingBox->getEntity()->getPos().x - (BoundingBox::SIZE / 2), 100, rand() % BoundingBox::SIZE + m_boundingBox->getEntity()->getPos().z - (BoundingBox::SIZE / 2)), entities);
     }

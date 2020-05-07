@@ -31,6 +31,8 @@
 #include "Headers/Engine/Graphics/Lighting/IBL/HDRI.h"
 #include "Headers/Engine/Graphics/Lighting/IBL/IBL.h"
 #include "Headers/Game/Loop/StateManager.h"
+#include "Headers/Game/Loop/Progression.h"
+#include "Headers/Game/Loop/Time.h"
 
 //@todo find out why collision engine broke
 //@todo find out why health and damage to player system is completely broken
@@ -39,6 +41,7 @@
 //@todo move raii for opengl texture resources into a heap allocated data class managed by shared_ptr (stops leaking while avoiding copy constructor calls). This will speed up start up time quite a lot.
 
 int main() {
+    Progression::start();
     Camera camera;
     Window window(&camera);
     Player player;
@@ -196,6 +199,26 @@ int main() {
             true
     );
 
+    Button displayButton(
+            Text(fontFile, imageFile, std::string("test")),
+            glm::vec2(0.0f, 0.0f),
+            glm::vec2(0.75, 0.75),
+            [&stateManager]()->void{ stateManager.resumeGame(*stateManager.window); },
+            &window,
+            false,
+            true,
+            Texture("../res/container.jpg", 1, "texture1")
+    );
+
+    Button healthButton(
+            Text(fontFile, imageFile, std::string("health: ")),
+            glm::vec2(-0.8f,0.9f),
+            glm::vec2(0.2, 0.1),
+            nullptr,
+            &window,
+            true
+    );
+
     Entity centerEntity(sphereMesh, pavement, pbrShader, glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(5,5,5));
 
     Entity playerEntity(
@@ -275,9 +298,12 @@ int main() {
     );
 
     Entity noteEntity2(noteEntity1);
+    Entity noteEntity3(noteEntity1);
     noteEntity2.setPos(glm::vec3(0, 2, 10));
+    noteEntity3.setPos(glm::vec3(0, 8, 10));
     noteEntity1.setAsItem();
     noteEntity2.setAsItem();
+    noteEntity3.setAsItem();
 
     CollisionHandler playerCollider(&playerEntity);
     player = Player(&camera, &playerEntity, playerCollider);
@@ -286,15 +312,15 @@ int main() {
     Shooter shooter(&camera, &bullet, &player);
     entities.push_back(&playerEntity);
 
-    Animal wolf1(wolfEntity, &player, 1, 5, 2.0, 1.0);
-    Animal deer1(deerEntity, &player, 3, 3, 1.5, 1.0);
+    Animal wolf1(wolfEntity, &player, 1, 5, 66.7f, 1.0f);
+    Animal deer1(deerEntity, &player, 2, 2, 50.0f, 1.0f);
     BoundingBox boundingBox(&boundingBoxEntity);
     Spirit spirit(spiritEntity, &player, &boundingBox, wolf1, deer1);
     entities.push_back(spirit.getEntityPointer());
-    spirit.spawn(entities);
 
-    Item item1(&noteEntity1, [&hdr]()->void{hdr.setHDRStatus(!hdr.getHDRStatus());}, entities);
-    Item item2(&noteEntity2, [&hdr]()->void{hdr.setHDRStatus(!hdr.getHDRStatus());}, entities);
+    Item item1(&noteEntity1, [&stateManager]()->void{stateManager.display(*stateManager.window); Progression::advance();}, entities);
+    Item item2(&noteEntity2, [&stateManager]()->void{stateManager.display(*stateManager.window); Progression::advance();}, entities);
+    Item item3(&noteEntity3, [&stateManager]()->void{stateManager.display(*stateManager.window); Progression::advance();}, entities);
 
     std::array<Terrain, 9> terrains;
     for (int x0 = -1, index = 0; x0 < 2 && index < terrains.size(); ++x0) {
@@ -303,7 +329,9 @@ int main() {
         }
     }
 
+    Time::start();
     while (!glfwWindowShouldClose(window.getWindow()) && player.getHealth() > 0) {
+        Time::update();
         Input::getInstance()->processInput(&player, stateManager);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -311,14 +339,12 @@ int main() {
 
         hdr.bind();
 
-        /*
-        if(!spirit.isAlive()) {
-            double respawnChance = rand() % 500;
-            if(respawnChance == 0) {
+        if(!spirit.isAlive() && stateManager.getState() == stateManager.RUNNING && Progression::getProgress() != 3) {
+            double respawnChance = rand() % 5000;
+            if(respawnChance <= Progression::getProgress()) {
                 spirit.spawn(entities);
             }
         }
-         */
 
 
         skybox.render(skyboxShader, camera);
@@ -336,9 +362,14 @@ int main() {
             spirit.updateAnimals(entities, terrains);
             spirit.update(entities, terrains);
             textureButton.render(buttonShader);
+            healthButton.setText(Text(fontFile, imageFile, std::string("Health: " + std::to_string((int)player.getCurrentHealth()))));
+            healthButton.render(buttonShader);
         } else if(stateManager.getState() == StateManager::PAUSED) {
             playButton.render(buttonShader); //@todo get rid of the order of rendering of quads mattering
             exitButton.render(buttonShader);
+        } else if(stateManager.getState() == StateManager::DISPLAY) {
+            displayButton.setText(Text(fontFile, imageFile, std::to_string(Progression::getProgress())));
+            displayButton.render(buttonShader);
         } else if(stateManager.getState() == StateManager::QUITING) {
             glfwSetWindowShouldClose(window.getWindow(), true);
             continue;

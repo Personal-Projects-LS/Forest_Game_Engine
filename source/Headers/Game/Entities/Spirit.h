@@ -4,6 +4,7 @@
 #include "Headers/Engine/Models/Entity.h"
 #include "Headers/Engine/Collisions/CollisionHandler.h"
 #include "Headers/Game/Player/Player.h"
+#include "Headers/Game/Loop/Progression.h"
 #include "Animal.h"
 #include <Headers/Game/Environment/BoundingBox.h>
 #include <memory>
@@ -89,7 +90,7 @@ private:
     int m_health = 1;
     int m_damage = 20;
     int m_numOfAnimals = 0;
-    float const MOVE_SPEED = 1.0f;
+    float const MOVE_SPEED = 33.3f;
     float const JUMP_POWER = 1.0f;
     Entity m_entity;
     CollisionHandler m_collisionHandler;

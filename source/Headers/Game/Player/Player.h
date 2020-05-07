@@ -21,8 +21,8 @@ private:
     float jumpingSpeed = 0;
     int currentHealth = MAX_HEALTH;
 public:
-    static constexpr float SPEED = 2.0f;
-    static constexpr float LATERAL_SPEED = 1.5f;
+    static constexpr float SPEED = 66.7f;
+    static constexpr float LATERAL_SPEED = 50.0f;
     static constexpr float JUMP_POWER = 2.0f;
     static constexpr int MAX_HEALTH = 20;
 
