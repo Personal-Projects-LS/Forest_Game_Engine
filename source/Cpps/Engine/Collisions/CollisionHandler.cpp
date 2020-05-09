@@ -287,6 +287,7 @@ void CollisionHandler::collideAndSlide(
     m_hitEntity = nullptr;
     move.startingPos = m_entity->getPos();
     move.movement = vel;
+    move.endingPos = move.startingPos + move.movement;
 // change values into elipseSpace
     glm::vec3 eSpacePosition = move.startingPos / move.eRadius;
     glm::vec3 eSpaceVelocity = move.movement / move.eRadius;
@@ -333,7 +334,10 @@ glm::vec3 CollisionHandler::collideWithWorld(
     move.foundCollision = false;
 // Check for collisions
     for(Entity *entity : entities) {
-        if(entity != m_entity  && !(entity->checkIfPlayerEntity() && m_entity->checkIfBullet())) {
+        if(!entity->isCollidable()) {
+            continue;
+        }
+        if(entity != m_entity  && !(entity->checkIfPlayerEntity() && m_entity->checkIfBullet()) && entityIsInPath(entity, 30.0f)) {
             calculateCollisions(entity->planes, entity);
         }
     }
@@ -448,4 +452,20 @@ void CollisionHandler::updateGravity() {
 
 float CollisionHandler::simGravity(float tics) {
     return currentGravity.y + (CollisionHandler::GRAVITY.y * tics);
+}
+
+bool CollisionHandler::entityIsInPath(Entity *entity, float error) {
+    return betweenPoints(move.startingPos, move.endingPos, entity->getPos(), error);
+}
+
+bool CollisionHandler::betweenPoints(glm::vec3 &p1, glm::vec3 &p2, glm::vec3&& pointToTest, float error) {
+    return betweenNums(p1.x, p2.x, pointToTest.x, error) &&  betweenNums(p1.z, p2.z, pointToTest.z, error);
+}
+
+bool CollisionHandler::betweenNums(float num1, float num2, float numToTest, float error) {
+    if(num1 > num2) {
+        return numToTest > num2 - error && numToTest < num1 + error;
+    } else {
+        return numToTest > num1 - error && numToTest < num2 + error;
+    }
 }

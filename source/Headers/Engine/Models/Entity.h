@@ -59,9 +59,12 @@ public:
     glm::vec3 getScale();
     glm::vec3 getPos();
     glm::vec3 getRotation();
+    std::shared_ptr<Mesh> getMesh();
+    std::vector<Texture> getTextures();
     void setPos(glm::vec3& newPos);
     void setPos(glm::vec3&& newPos);
     void setRotation(glm::vec3& newRotation);
+    void setScale(glm::vec3& newScale);
     void rotate(glm::vec3& rotation);
     void rotate(float x, float y, float z);
     void translate(glm::vec3& translation);
@@ -82,6 +85,10 @@ public:
     bool hit = false;
     bool pickedUp = false;
     double verticalOffset = 0;
+    void setNumOfRows(int num);
+    void setOffset(int index);
+    void setUncollidable();
+    bool isCollidable();
 private:
     std::shared_ptr<Mesh> mesh = nullptr;
     std::vector<Texture> textures;
@@ -94,9 +101,11 @@ private:
     bool isAnimal = false;
     bool isItem = false;
     float flipped = -1;
+    int numOfRows = 1;
+    glm::vec2 offset = glm::vec2(0, 0);
+    bool collidable = true;
     void limitRotation();
     void moveEntityPlanes(std::vector<glm::vec3>& vertices);
-
 };
 
 

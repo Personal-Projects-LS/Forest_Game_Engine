@@ -40,6 +40,19 @@
 //@todo optimize startup time so that not so much time is spent (look into advanced C++, vectorization, allocators, etc.)
 //@todo move raii for opengl texture resources into a heap allocated data class managed by shared_ptr (stops leaking while avoiding copy constructor calls). This will speed up start up time quite a lot.
 
+
+template<size_t N>
+float getHeight(std::array<Terrain, N>& terrains, float x, float z) {
+    for(Terrain& terrain : terrains) {
+        if(!(x >= terrain.getPos().x && z >= terrain.getPos().z && x < terrain.getPos().x + TerrainMesh::SIZE && z < terrain.getPos().z + TerrainMesh::SIZE)) {
+            continue;
+        }
+        return terrain.getTerrainHeight(x, z);
+    }
+    std::cout << "broke" << std::endl;
+    return 0;
+}
+
 int main() {
     Progression::start();
     Camera camera;
@@ -89,7 +102,7 @@ int main() {
     );
 
     //IBL Shaders
-    Shader backgroundShader(
+    /*Shader backgroundShader(
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/backgroundVertex.glsl",
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/backgroundFragment.glsl"
             );
@@ -109,6 +122,7 @@ int main() {
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/brdfVertex.glsl",
             "../source/Cpps/Engine/Graphics/Lighting/IBL/Shaders/brdfFragment.glsl"
             );
+    */
 
 /*
     HDRI hdri("../res/Creek.hdr");
@@ -123,7 +137,11 @@ int main() {
     std::shared_ptr<Mesh> containerMesh = std::make_shared<Mesh>("../res/container.obj", true);
     std::shared_ptr<Mesh> wolfMesh = std::make_shared<Mesh>("../res/wolf.obj", false);
     std::shared_ptr<Mesh> deerMesh = std::make_shared<Mesh>("../res/deer.obj", false);
-    std::shared_ptr<Mesh> sphereMesh = std::make_shared<Mesh>("../res/Sphere.obj", true);
+    //std::shared_ptr<Mesh> sphereMesh = std::make_shared<Mesh>("../res/Sphere.obj", true);
+    std::shared_ptr<Mesh> treeMesh = std::make_shared<Mesh>("../res/pine.obj", false);
+    std::shared_ptr<Mesh> playerMesh = std::make_shared<Mesh>("../res/person.obj", false);
+    std::shared_ptr<Mesh> boulderMesh = std::make_shared<Mesh>("../res/boulder.obj", true);
+    std::shared_ptr<Mesh> fernMesh = std::make_shared<Mesh>("../res/fern.obj", false);
 
 
     std::array<TerrainMesh, 2> terrainMeshes {
@@ -131,7 +149,7 @@ int main() {
             TerrainMesh("../res/heightmap2.png"),
     };
 
-    Material pavement("../res/mud", 0);
+    //Material pavement("../res/mud", 0);
 
 
     TerrainTextureMap terrainMap (
@@ -156,9 +174,13 @@ int main() {
     Texture specularMap("../res/SpecularMap.jpg", 3, "texture3");
     Texture wolfTexture("../res/wolfTexture.png", 0, "texture0");
     Texture deerTexture("../res/deerTexture.png", 0, "texture0");
-    Texture human("../res/human.jpg", 0, "texture0");
+    Texture human("../res/playerTexture.png", 0, "texture0");
     Texture ghostTexture("../res/ghost.png", 0, "texture0");
     Texture noteTexture("../res/note.png", 0, "texture0");
+    Texture treeTexture("../res/pine.png", 0, "texture0");
+    Texture boulderTexture("../res/boulder.png", 0, "texture0");
+    Texture boulderNormal("../res/boulderNormal.png", 2, "texture2");
+    Texture fernTexture("../res/fern.png", 0, "texture0");
     std::vector<Texture> currentTextures;
 
 
@@ -183,7 +205,7 @@ int main() {
             Text(fontFile, imageFile, std::string("Quit")),
             glm::vec2(0.0f, -0.5f),
             glm::vec2(0.75, 0.75),
-            [&stateManager]()->void{ stateManager.exitGame();},
+            [&window]()->void{ glfwSetWindowShouldClose(window.getWindow(), true);},
             &window,
             false,
             true,
@@ -210,6 +232,39 @@ int main() {
             Texture("../res/container.jpg", 1, "texture1")
     );
 
+    Button victoryButton(
+            Text(fontFile, imageFile, std::string("Congratulations!")),
+            glm::vec2(0.0f,0.0f),
+            glm::vec2(0.75, 0.75),
+            [&window]()->void{glfwSetWindowShouldClose(window.getWindow(), true);},
+            &window,
+            false,
+            true,
+            Texture("../res/container.jpg", 1, "texture1")
+    );
+
+    Button defeatButton(
+            Text(fontFile, imageFile, std::string("Dead!")),
+            glm::vec2(0.0f,0.0f),
+            glm::vec2(0.75, 0.75),
+            [&window]()->void{glfwSetWindowShouldClose(window.getWindow(), true);},
+            &window,
+            false,
+            true,
+            Texture("../res/container.jpg", 1, "texture1")
+    );
+
+    Button startButton(
+            Text(fontFile, imageFile, std::string("Start!")),
+            glm::vec2(0.0f,-0.3f),
+            glm::vec2(0.5, 0.3),
+            [&stateManager]()->void{stateManager.resumeGame(*stateManager.window);},
+            &window,
+            false,
+            true,
+            Texture("../res/container.jpg", 1, "texture1")
+    );
+
     Button healthButton(
             Text(fontFile, imageFile, std::string("health: ")),
             glm::vec2(-0.8f,0.9f),
@@ -219,7 +274,43 @@ int main() {
             true
     );
 
-    Entity centerEntity(sphereMesh, pavement, pbrShader, glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(5,5,5));
+    Button statsButton(
+            Text(fontFile, imageFile, std::string("deltaTime: ")),
+            glm::vec2(0.8f, 0.9f),
+            glm::vec2(0.2, 0.1),
+            nullptr,
+            &window,
+            true
+    );
+
+    Button progressionButton(
+            Text(fontFile, imageFile, std::string("deltaTime: ")),
+            glm::vec2(0.8f, 0.8f),
+            glm::vec2(0.2, 0.1),
+            nullptr,
+            &window,
+            true
+    );
+
+    Button wonButton(
+            Text(fontFile, imageFile, std::string("deltaTime: ")),
+            glm::vec2(0.8f, 0.7f),
+            glm::vec2(0.2, 0.1),
+            nullptr,
+            &window,
+            true
+    );
+
+    Button title(
+            Text(fontFile, imageFile, std::string("Forest")),
+            glm::vec2(0.0f, 0.5f),
+            glm::vec2(0.6, 0.3),
+            nullptr,
+            &window,
+            true
+    );
+
+    //Entity centerEntity(sphereMesh, pavement, pbrShader, glm::vec3(0,5,0), glm::vec3(0,0,0), glm::vec3(5,5,5));
 
     Entity playerEntity(
             containerMesh,
@@ -266,7 +357,7 @@ int main() {
         containers[i].create(
                 containerMesh,
                 std::vector<Texture>{texture, normalMap, containerMap, specularMap},
-                glm::vec3(-250 + xTranslate, 10 + yTranslate, 100 + zTranslate),
+                glm::vec3(-300 + xTranslate, 10 + yTranslate, 300 + zTranslate),
                 glm::vec3(0, 0, 0),
                 glm::vec3(10, 10, 10)
         );
@@ -289,21 +380,39 @@ int main() {
             glm::vec3(500, 500, 500)
     );
 
+    std::array<Terrain, 9> terrains;
+    for (int x0 = -1, index = 0; x0 < 2 && index < terrains.size(); ++x0) {
+        for (int x1 = -1; x1 < 2; ++x1, ++index) {
+            terrains[index].create(terrainMap, terrainMeshes[index % 2], x0, x1);
+        }
+    }
+
     Entity noteEntity1(
             containerMesh,
             std::vector<Texture>{noteTexture},
-            glm::vec3(10, 2, 0),
+            glm::vec3(-450, getHeight(terrains, -450, 350) + 5, 350),
             glm::vec3(0, 0, 0),
             glm::vec3(1, 1, 1)
     );
 
     Entity noteEntity2(noteEntity1);
     Entity noteEntity3(noteEntity1);
-    noteEntity2.setPos(glm::vec3(0, 2, 10));
-    noteEntity3.setPos(glm::vec3(0, 8, 10));
+    Entity noteEntity4(noteEntity1);
+    noteEntity2.setPos(glm::vec3(1150, getHeight(terrains, 1150, -1250) + 5, -1250));
+    noteEntity3.setPos(glm::vec3(1150, getHeight(terrains, 1150, 1950) + 5, 1950));
+    noteEntity4.setPos(glm::vec3(2750, getHeight(terrains, 2750, 350) + 5, 350));
     noteEntity1.setAsItem();
     noteEntity2.setAsItem();
     noteEntity3.setAsItem();
+    noteEntity4.setAsItem();
+
+    Entity tree(
+            treeMesh,
+            std::vector<Texture>{treeTexture},
+            glm::vec3(0, 0, 0),
+            glm::vec3(0, 0, 0),
+            glm::vec3(1, 1, 1)
+    );
 
     CollisionHandler playerCollider(&playerEntity);
     player = Player(&camera, &playerEntity, playerCollider);
@@ -318,28 +427,83 @@ int main() {
     Spirit spirit(spiritEntity, &player, &boundingBox, wolf1, deer1);
     entities.push_back(spirit.getEntityPointer());
 
-    Item item1(&noteEntity1, [&stateManager]()->void{stateManager.display(*stateManager.window); Progression::advance();}, entities);
-    Item item2(&noteEntity2, [&stateManager]()->void{stateManager.display(*stateManager.window); Progression::advance();}, entities);
-    Item item3(&noteEntity3, [&stateManager]()->void{stateManager.display(*stateManager.window); Progression::advance();}, entities);
+    Item item1(&noteEntity1, [&stateManager, &spirit, &entities]()->void{Progression::advance(); spirit.spawn(entities);}, entities);
+    Item item2(&noteEntity2, [&stateManager, &spirit, &entities]()->void{Progression::advance(); spirit.spawn(entities);}, entities);
+    Item item3(&noteEntity3, [&stateManager, &spirit, &entities]()->void{Progression::advance(); spirit.spawn(entities);}, entities);
+    Item item4(&noteEntity4, [&stateManager, &spirit, &entities]()->void{Progression::advance(); spirit.spawn(entities);}, entities);
 
-    std::array<Terrain, 9> terrains;
-    for (int x0 = -1, index = 0; x0 < 2 && index < terrains.size(); ++x0) {
-        for (int x1 = -1; x1 < 2; ++x1, ++index) {
-            terrains[index].create(terrainMap, terrainMeshes[0], x0, x1);
-        }
+    float x, z, scaleFactor;
+    glm::vec3 pos;
+    glm::vec3 rot;
+    glm::vec3 scale;
+    std::array<Entity, 4000> es;
+    for(auto j = 0; j < es.size(); ++j) {
+        x = rand() % 4800 - 1600;
+        z = rand() % 4800 - 1600;
+        pos.x = x;
+        pos.z = z;
+        pos.y = getHeight(terrains, x, z);
+        rot = glm::vec3(0, 0, 0);
+        scaleFactor = rand() % 20 + 10;
+        scale = glm::vec3(scaleFactor, scaleFactor, scaleFactor);
+        es[j].create(treeMesh, std::vector{treeTexture}, pos, rot, scale);
+        entities.push_back(&es[j]);
+        ++j;
+        x = rand() % 4800 - 1600;
+        z = rand() % 4800 - 1600;
+        pos.x = x;
+        pos.z = z;
+        pos.y = getHeight(terrains, x, z);
+        rot = glm::vec3(rand() % 360, rand() % 360, rand() % 360);
+        scaleFactor = rand() % 5 + 1;
+        scale = glm::vec3(scaleFactor, scaleFactor, scaleFactor);
+        es[j].create(boulderMesh, std::vector{boulderTexture, boulderNormal}, pos, rot, scale);
+        entities.push_back(&es[j]);
+        ++j;
+        x = rand() % 4800 - 1600;
+        z = rand() % 4800 - 1600;
+        pos.x = x;
+        pos.z = z;
+        pos.y = getHeight(terrains, x, z);
+        rot = glm::vec3(0, rand() % 360, 0);
+        scaleFactor = rand() % 5 + 1;
+        scale = glm::vec3(scaleFactor, scaleFactor, scaleFactor);
+        es[j].create(fernMesh, std::vector{fernTexture}, pos, rot, scale);
+        es[j].setNumOfRows(2);
+        es[j].setOffset(rand() % 4);
+        es[j].setUncollidable();
+        entities.push_back(&es[j]);
+        ++j;
+        x = rand() % 4800 - 1600;
+        z = rand() % 4800 - 1600;
+        pos.x = x;
+        pos.z = z;
+        pos.y = getHeight(terrains, x, z);
+        rot = glm::vec3(0, rand() % 360, 0);
+        scaleFactor = rand() % 5 + 1;
+        scale = glm::vec3(scaleFactor, scaleFactor, scaleFactor);
+        es[j].create(fernMesh, std::vector{fernTexture}, pos, rot, scale);
+        es[j].setNumOfRows(2);
+        es[j].setOffset(rand() % 4);
+        es[j].setUncollidable();
+        entities.push_back(&es[j]);
     }
 
     Time::start();
-    while (!glfwWindowShouldClose(window.getWindow()) && player.getHealth() > 0) {
+    while (!glfwWindowShouldClose(window.getWindow())) {
         Time::update();
         Input::getInstance()->processInput(&player, stateManager);
+
+        if(player.getHealth() <= 0) {
+            stateManager.exitGame(window);
+        }
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(static_cast<unsigned int>(GL_COLOR_BUFFER_BIT) | static_cast<unsigned int>(GL_DEPTH_BUFFER_BIT));
 
         hdr.bind();
 
-        if(!spirit.isAlive() && stateManager.getState() == stateManager.RUNNING && Progression::getProgress() != 3) {
+        if(!spirit.isAlive() && stateManager.getState() == stateManager.RUNNING) {
             double respawnChance = rand() % 5000;
             if(respawnChance <= Progression::getProgress()) {
                 spirit.spawn(entities);
@@ -352,6 +516,8 @@ int main() {
         shooter.update();
         item1.update(entities, &player);
         item2.update(entities, &player);
+        item3.update(entities, &player);
+        item4.update(entities, &player);
         if(Input::getInstance()->isShouldShoot()) {
             shooter.shoot(entities, terrains);
             Input::getInstance()->setShouldShoot(false);
@@ -360,7 +526,7 @@ int main() {
         if(stateManager.getState() == StateManager::RUNNING) {
             player.movePlayer(entities, terrains, nullptr, false);
             spirit.updateAnimals(entities, terrains);
-            spirit.update(entities, terrains);
+            spirit.update(entities, terrains, stateManager);
             textureButton.render(buttonShader);
             healthButton.setText(Text(fontFile, imageFile, std::string("Health: " + std::to_string((int)player.getCurrentHealth()))));
             healthButton.render(buttonShader);
@@ -371,8 +537,12 @@ int main() {
             displayButton.setText(Text(fontFile, imageFile, std::to_string(Progression::getProgress())));
             displayButton.render(buttonShader);
         } else if(stateManager.getState() == StateManager::QUITING) {
-            glfwSetWindowShouldClose(window.getWindow(), true);
-            continue;
+            defeatButton.render(buttonShader);
+        } else if(stateManager.getState() == StateManager::WON) {
+            victoryButton.render(buttonShader);
+        } else if(stateManager.getState() == StateManager::MENU) {
+            startButton.render(buttonShader);
+            title.render(buttonShader);
         }
 
 
@@ -385,11 +555,18 @@ int main() {
             terrain.render(camera, terrainShader, lightPos, lightColor);
         }
 
+        /*statsButton.setText(Text(fontFile, imageFile, std::string("FPS: " + std::to_string((float)1/Time::getDeltaTime()))));
+        statsButton.render(buttonShader);
+        progressionButton.setText(Text(fontFile, imageFile, std::string("Progression: " + std::to_string(Progression::getProgress()))));
+        progressionButton.render(buttonShader);
+        wonButton.setText(Text(fontFile, imageFile, std::string("FPS: " + std::to_string(Progression::getWon()))));
+        wonButton.render(buttonShader);*/
+
 
         pbrShader.use();
         pbrShader.setInt("textured", true);
         //ibl.bindMaps();
-        centerEntity.render(camera, pointLights);
+        //centerEntity.render(camera, pointLights);
 
 
         hdr.render(entityShader, 1);

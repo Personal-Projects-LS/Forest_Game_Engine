@@ -10,6 +10,7 @@ struct Movement {
     glm::vec3 eRadius;
     glm::vec3 movement;
     glm::vec3 startingPos;
+    glm::vec3 endingPos;
     glm::vec3 eSpaceMovement;
     glm::vec3 eSpaceMovementNormalized;
     glm::vec3 eSpaceStartingPos;
@@ -66,6 +67,9 @@ private:
     void calculateTerrainCollisions(glm::vec3 &finalMove);
     void updateGravity();
     float simGravity(float tics);
+    bool entityIsInPath(Entity* entity, float error);
+    bool betweenPoints(glm::vec3& p1, glm::vec3& p2, glm::vec3&& pointToTest, float error);
+    bool betweenNums(float num1, float num2, float numToTest, float error);
 public:
     static constexpr glm::vec3 GRAVITY = glm::vec3(0, -3.5f, 0);
     static constexpr float unitsPerMeter = 100;
@@ -104,6 +108,21 @@ public:
                 m_entity->setPos(newPos);
             } else if(m_entity->getPos().z < -boundingBox->getScale().z + 5 + boundingBox->getPos().z) {
                 glm::vec3 newPos(m_entity->getPos().x, m_entity->getPos().y, -boundingBox->getScale().z + 5 + boundingBox->getPos().z);
+                m_entity->setPos(newPos);
+            }
+        } else {
+            if (m_entity->getPos().x > 3200) {
+                glm::vec3 newPos(3200, m_entity->getPos().y, m_entity->getPos().z);
+                m_entity->setPos(newPos);
+            } else if (m_entity->getPos().x < -1600) {
+                glm::vec3 newPos(-1600, m_entity->getPos().y, m_entity->getPos().z);
+                m_entity->setPos(newPos);
+            }
+            if (m_entity->getPos().z > 3200) {
+                glm::vec3 newPos(m_entity->getPos().x, m_entity->getPos().y, 3200);
+                m_entity->setPos(newPos);
+            } else if (m_entity->getPos().z < -1600) {
+                glm::vec3 newPos(m_entity->getPos().x, m_entity->getPos().y, -1600);
                 m_entity->setPos(newPos);
             }
         }

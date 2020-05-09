@@ -8,13 +8,14 @@
 #include "Animal.h"
 #include <Headers/Game/Environment/BoundingBox.h>
 #include <memory>
+#include <Headers/Game/Loop/StateManager.h>
 
 class Spirit {
 public:
     Spirit(Entity& entity, Player* player, BoundingBox* boundingBox, Animal& genericWolf, Animal& genericDeer);
 
     template <size_t N>
-    void update(std::vector<Entity *> &entities, std::array<Terrain, N> &terrains) {
+    void update(std::vector<Entity *> &entities, std::array<Terrain, N> &terrains, StateManager& stateManager) {
         m_numOfAnimals = m_wolves.size() + m_deer.size();
         if(m_health > 0) {
             if (m_entity.hit) {
@@ -27,6 +28,10 @@ public:
                         if(&m_entity == entities[i]) {
                             entities.erase(entities.begin() + i);
                         }
+                    }
+                    if(Progression::getProgress() == 4) {
+                        Progression::hasWon();
+                        stateManager.win(*stateManager.window);
                     }
                 }
             }

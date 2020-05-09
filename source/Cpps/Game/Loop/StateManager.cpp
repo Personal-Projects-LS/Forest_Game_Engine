@@ -1,7 +1,7 @@
 #include "Headers/Game/Loop/StateManager.h"
 
 StateManager::StateManager(Window* window) {
-    gameState = RUNNING;
+    gameState = MENU;
     this->window = window;
 }
 
@@ -20,8 +20,14 @@ void StateManager::display(Window &window) {
     glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
-void StateManager::exitGame() {
+void StateManager::win(Window &window) {
+    gameState = WON;
+    glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void StateManager::exitGame(Window& window) {
     gameState = QUITING;
+    glfwSetInputMode(window.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 StateManager::State StateManager::getState() {

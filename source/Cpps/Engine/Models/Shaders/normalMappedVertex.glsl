@@ -13,13 +13,15 @@ out mat3 TBN;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform int numOfRows;
+uniform vec2 offset;
 
 void main()
 {
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     fragPos = vec3(model * vec4(aPos, 1.0));
 
-    texCoord = aTexCoord;
+    texCoord = (aTexCoord / numOfRows) + offset;
 
     vec3 T = normalize(vec3(model * vec4(aTangent,   0.0)));
     vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));

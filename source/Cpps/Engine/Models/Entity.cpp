@@ -61,6 +61,12 @@ void Entity::render(Camera& camera, Shader& inputShader, glm::vec3& lightPos, gl
     int viewLoc = glGetUniformLocation(inputShader.ID, "viewPos");
     glUniform3fv(viewLoc, 1, glm::value_ptr(camera.getPos()));
 
+    int rowsLoc = glGetUniformLocation(inputShader.ID, "numOfRows");
+    glUniform1i(rowsLoc, numOfRows);
+
+    int offsetLoc = glGetUniformLocation(inputShader.ID, "offset");
+    glUniform2fv(offsetLoc, 1, glm::value_ptr(offset));
+
     glDrawArrays(GL_TRIANGLES, 0, mesh->getNumOfVertices());
 
     for (Texture &texture : textures) {
@@ -87,6 +93,12 @@ void Entity::render(Camera& camera, std::vector<PointLight>& pointLights) {
 
     int viewLoc = glGetUniformLocation(shader.ID, "viewPos");
     glUniform3fv(viewLoc, 1, glm::value_ptr(camera.getPos()));
+
+    int rowsLoc = glGetUniformLocation(shader.ID, "numOfRows");
+    glUniform1i(rowsLoc, numOfRows);
+
+    int offsetLoc = glGetUniformLocation(shader.ID, "offset");
+    glUniform2fv(offsetLoc, 1, glm::value_ptr(offset));
 
     for(int i = 0; i < pointLights.size(); ++i) {
         shader.setVec3("pointLights[" + std::to_string(i) + "].position", pointLights[i].position);
@@ -181,6 +193,12 @@ void Entity::addScale(float x, float y, float z) {
     moveEntityPlanes(mesh->getCollisionCube());
 }
 
+void Entity::setScale(glm::vec3 &newScale) {
+    scale = newScale;
+    createModelMatrix();
+    moveEntityPlanes(mesh->getCollisionCube());
+}
+
 void Entity::limitRotation() {
     while(rotation.x >= 360) {
         rotation.x -= 360;
@@ -204,6 +222,13 @@ void Entity::limitRotation() {
 
 glm::vec3 Entity::getScale() {
     return scale;
+}
+
+std::shared_ptr<Mesh> Entity::getMesh() {
+    return mesh;
+}
+std::vector<Texture> Entity::getTextures() {
+    return textures;
 }
 
 void Entity::moveEntityPlanes(std::vector<glm::vec3> &vertices) {
@@ -271,4 +296,23 @@ void Entity::create(
     createModelMatrix();
 
     moveEntityPlanes(mesh->getVertices());
+}
+
+void Entity::setNumOfRows(int num) {
+    numOfRows = num;
+}
+
+void Entity::setOffset(int index) {
+    int column = index % numOfRows;
+    offset.x = (float)column / (float)numOfRows;
+    int row = index / numOfRows;
+    offset.y = (float)row / (float)numOfRows;
+}
+
+void Entity::setUncollidable() {
+    collidable = false;
+}
+
+bool Entity::isCollidable() {
+    return collidable;
 }

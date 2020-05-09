@@ -9,7 +9,9 @@ public:
         RUNNING,
         PAUSED,
         QUITING,
-        DISPLAY
+        DISPLAY,
+        WON,
+        MENU
     };
 
     StateManager(Window* window);
@@ -17,7 +19,8 @@ public:
     void pauseGame(Window& window);
     void display(Window& window);
     void resumeGame(Window& window);
-    void exitGame();
+    void win(Window& window);
+    void exitGame(Window& window);
 
     State getState();
     Window* window;

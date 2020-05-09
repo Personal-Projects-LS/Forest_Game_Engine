@@ -127,6 +127,7 @@ void Mesh::loadOBJ(const char* filename, std::vector<glm::vec3>& finalVertices, 
             } else if(std::strcmp(lineHeader, "vt") == 0) {
                 glm::vec2 newTextureCoord;
                 std::fscanf(file, "%f %f\n", &newTextureCoord.x, &newTextureCoord.y);
+                newTextureCoord.y = 1 - newTextureCoord.y;
                 textureCoords.push_back(newTextureCoord);
             } else if(std::strcmp(lineHeader, "vn") == 0) {
                 glm::vec3 newNormal;

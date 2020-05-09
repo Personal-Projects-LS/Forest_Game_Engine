@@ -44,5 +44,9 @@ void main()
 
     vec4 result = vec4((ambient + diffuse + specular), 1.0) * texture(texture0, texCoord);
 
+    if(result.w < 0.5) {
+        discard;
+    }
+
     FragColor = result;
 }
